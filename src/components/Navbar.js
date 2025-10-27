@@ -3,6 +3,7 @@ import { NavLink, Link } from "react-router-dom";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  const closeMenu = () => set0pen(false)
 
   return (
     <header className="nav-header">
