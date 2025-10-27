@@ -3,7 +3,6 @@ import { NavLink, Link } from "react-router-dom";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
-  const closeMenu = () => set0pen(false)
 
   return (
     <header className="nav-header">
@@ -21,23 +20,33 @@ const Navbar = () => {
           className="nav-toggle"
           onClick={() => setOpen(!open)}
         >
-          ☰
+          {open ? "✕" : "☰"}
         </button>
 
         <nav className={`nav-links ${open ? "open" : ""}`}>
-          <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}>
+          <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : "")}
+          onClick={() => setOpen(false)}
+          >
             Inicio
           </NavLink>
-          <NavLink to="/servicios" className={({ isActive }) => (isActive ? "active" : "")}>
+          <NavLink to="/servicios" className={({ isActive }) => (isActive ? "active" : "")}
+          onClick={() => setOpen(false)}
+          >
             Servicios
           </NavLink>
-          <NavLink to="/citas" className={({ isActive }) => (isActive ? "active" : "")}>
+          <NavLink to="/citas" className={({ isActive }) => (isActive ? "active" : "")}
+          onClick={() => setOpen(false)}
+          >
             Citas
           </NavLink>
-          <NavLink to="/contacto" className={({ isActive }) => (isActive ? "active" : "")}>
+          <NavLink to="/contacto" className={({ isActive }) => (isActive ? "active" : "")}
+          onClick={() => setOpen(false)}
+          >
             Contacto
           </NavLink>
-          <NavLink to="/login" className={({ isActive }) => (isActive ? "active" : "")}>
+          <NavLink to="/login" className={({ isActive }) => (isActive ? "active" : "")}
+          onClick={() => setOpen(false)}
+          >
             Admin
           </NavLink>
         </nav>
@@ -47,4 +56,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-

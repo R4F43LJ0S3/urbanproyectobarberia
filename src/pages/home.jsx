@@ -111,16 +111,44 @@ const Home = () => {
         </p>
         <div className="about-cards">
           <article className="card">
+
             <h3>Ambiente profesional</h3>
-            <p>Un espacio pensado para que salgas listo y con confianza.</p>
+            <div className="card-image">
+              <img 
+                src="/imagen-ambiente.png" 
+                alt="Ambiente Profesional"
+              />
+            </div>
+            <p>En Urban Barber, cada detalle está diseñado para ofrecerte una experiencia de primer nivel. 
+              Nuestro espacio combina comodidad, estilo y limpieza, creando un entorno donde puedes relajarte mientras recibes un servicio personalizado. 
+              La iluminación, la música y el ambiente moderno contribuyen a que te sientas seguro, renovado y con confianza al salir.</p>
           </article>
           <article className="card">
+            
             <h3>Productos premium</h3>
-            <p>Usamos productos de calidad para cuidar tu cabello y tu piel.</p>
+            <div className="card-image">
+              <img 
+                src="/imagen-productos.png" 
+                alt="Productos premium"
+              />
+            </div>
+            <p>Trabajamos exclusivamente con productos de alta calidad, seleccionados cuidadosamente para proteger y nutrir tu cabello, barba y piel. 
+              Desde champús y aceites naturales hasta ceras y tratamientos capilares profesionales, todo lo que utilizamos garantiza resultados duraderos y saludables. 
+              Porque creemos que el cuidado personal comienza con buenos productos.</p>
           </article>
           <article className="card">
+
             <h3>Atención al cliente</h3>
-            <p>Comunicación fluida y soporte en la web (prototipo).</p>
+            <div className="card-image">
+              <img 
+                src="/imagen-atencion.png" 
+                alt="Atencion al Cliente"
+              />
+            </div>
+            <p>Nos caracterizamos por brindar una atención cercana, rápida y personalizada. 
+              Valoramos tu tiempo y buscamos que cada visita sea una experiencia satisfactoria. 
+              Además, contamos con canales digitales de comunicación, donde podrás agendar tu cita, resolver dudas o recibir asesoría directamente desde nuestra web (actualmente en fase de prototipo). 
+              Tu comodidad es nuestra prioridad.</p>
           </article>
         </div>
       </section>
