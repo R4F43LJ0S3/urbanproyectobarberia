@@ -64,7 +64,7 @@ const Contacto = () => {
         <p>📞 Teléfono: 300 456 7890</p>
         <p>📧 Email: contacto@urbanbarber.com</p>
         <p>🏠 Dirección: Calle 10 #25-45, Valledupar, Colombia</p>
-        <p>🕐 Horario: Lunes a Sábado — 9:00 a.m. a 7:00 p.m.</p>
+        <p>🕐 Horario: Lunes a Domingo — 9:00 a.m. a 7:00 p.m.</p>
       </section>
     </main>
   );
