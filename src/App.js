@@ -2,6 +2,7 @@ import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/home";
 import Servicios from "./pages/servicios";
 import Citas from "./pages/Citas";
@@ -11,6 +12,7 @@ import Login from "./pages/Login";
 function App() {
   return (
     <>
+      <ScrollToTop />
       <Navbar />
       <div style={{ paddingTop: 20, minHeight: "80vh" }}>
         <Routes>
@@ -27,5 +29,3 @@ function App() {
 }
 
 export default App;
-
-
