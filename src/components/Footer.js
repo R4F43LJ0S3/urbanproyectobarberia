@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { Facebook, Instagram, MessageCircle } from "lucide-react";
 
 const Footer = () => {
   return (
@@ -26,9 +27,30 @@ const Footer = () => {
         <div className="footer-social">
           <h4>Síguenos</h4>
           <div className="social-icons">
-            <a href="https://facebook.com" target="_blank" rel="noreferrer">📘</a>
-            <a href="https://instagram.com" target="_blank" rel="noreferrer">📸</a>
-            <a href="https://wa.me/573004567890" target="_blank" rel="noreferrer">💬</a>
+            <a 
+              href="https://facebook.com" 
+              target="_blank" 
+              rel="noreferrer"
+              aria-label="Facebook"
+            >
+              <Facebook size={24} />
+            </a>
+            <a 
+              href="https://instagram.com" 
+              target="_blank" 
+              rel="noreferrer"
+              aria-label="Instagram"
+            >
+              <Instagram size={24} />
+            </a>
+            <a 
+              href="https://wa.me/573004567890" 
+              target="_blank" 
+              rel="noreferrer"
+              aria-label="WhatsApp"
+            >
+              <MessageCircle size={24} />
+            </a>
           </div>
         </div>
       </div>
