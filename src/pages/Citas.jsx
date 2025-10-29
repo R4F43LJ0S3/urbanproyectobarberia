@@ -27,16 +27,12 @@ const Citas = () => {
   }, [citas]);
 
   const servicios = [
-    "Corte de Cabello",
-    "Corte de Cabello para Niños",
-    "Tratamiento Reparador Anticaida",
-    "Rapado",
-    "Afeitado de Cabeza",
-    "Alizado de Cabello",
-    "Arreglo de Barba",
+    "Corte Sencillo",
+    "Corte + Cejas",
+    "Corte Premium (Cejas + Perfilado de Barba)",
     "Perfilado de Barba",
-    "Afeitado de Barba",
-    "Tintura de Barba",
+    "Corte + Tinturado de Cabello",
+    "Corte + Mascarilla",
   ];
 
   const handleSubmit = (e) => {
