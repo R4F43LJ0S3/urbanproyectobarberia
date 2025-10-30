@@ -1,0 +1,424 @@
+:root {
+--bg: #f7f7f7;
+  --card: #ffffff;
+  --text: #111;
+  --accent: #c59a2f;
+  --accent-dark: #111;
+  --muted: #6b6b6b;
+  --container: 1100px;
+  --shadow: rgba(0, 0, 0, 0.08);
+  --border: #e5e5e5;
+  --input-bg: #fafafa;
+  --nav-bg: #ffffff;
+  --footer-bg-start: #1a1a1a;
+  --footer-bg-end: #0d0d0d;
+}
+
+/* PAGO PAGE STYLES */
+
+.pago-page {
+  padding: 40px 0;
+  min-height: 60vh;
+}
+
+.pago-layout {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 32px;
+  margin-top: 32px;
+}
+
+/* RESUMEN DE LA CITA */
+.pago-resumen {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 20px var(--shadow);
+  border: 1px solid var(--border);
+  height: fit-content;
+}
+
+.pago-resumen h3 {
+  color: var(--accent);
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+}
+
+.resumen-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.resumen-item:last-child {
+  border-bottom: none;
+}
+
+.resumen-item span {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.resumen-item strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.resumen-divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e5e5e5, transparent);
+  margin: 16px 0;
+}
+
+.resumen-item.total {
+  margin-top: 8px;
+  padding: 16px 0;
+  background: rgba(197, 154, 47, 0.08);
+  padding: 16px;
+  border-radius: 10px;
+  border: none;
+}
+
+.resumen-item.total strong {
+  color: var(--accent);
+  font-size: 1.3rem;
+}
+
+/* MÉTODOS DE PAGO */
+.pago-metodos {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 20px var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.pago-metodos h3 {
+  color: var(--accent);
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.3rem;
+}
+
+/* TARJETA NEQUI */
+.metodo-pago-card {
+  background: linear-gradient(135deg, #f8f8f8 0%, #ffffff 100%);
+  border: 2px solid #e5e5e5;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+}
+
+.nequi-card {
+  border-color: #c59a2f;
+  background: linear-gradient(135deg, #fff9f0 0%, #ffffff 100%);
+}
+
+.nequi-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nequi-icon {
+  font-size: 2rem;
+}
+
+.nequi-header strong {
+  display: block;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.nequi-numero {
+  color: var(--accent);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* OPCIONES DE PAGO */
+.opciones-pago {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.opcion-pago {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid #e5e5e5;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: #fafafa;
+}
+
+.opcion-pago:hover {
+  border-color: var(--accent);
+  background: rgba(197, 154, 47, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(197, 154, 47, 0.15);
+}
+
+.opcion-pago input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--accent);
+}
+
+.opcion-contenido {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.opcion-contenido strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.opcion-precio {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.opcion-contenido small {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* INFO DEL PAGO */
+.pago-info {
+  background: rgba(197, 154, 47, 0.08);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  color: var(--text);
+}
+
+.info-item strong {
+  color: var(--text);
+}
+
+.info-item span {
+  color: var(--muted);
+}
+
+.monto-destacado {
+  color: var(--accent) !important;
+  font-size: 1.3rem !important;
+  font-weight: 700 !important;
+}
+
+/* ALERTA IMPORTANTE */
+.alerta-importante {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%);
+  border: 1px solid #ffd966;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.alerta-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.alerta-importante strong {
+  color: var(--text);
+  display: block;
+  margin-bottom: 4px;
+}
+
+.alerta-importante div {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* HORARIOS */
+.horarios-atencion {
+  background: #f8f8f8;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 24px;
+  border: 1px solid #e5e5e5;
+}
+
+.horarios-atencion h4 {
+  color: var(--accent);
+  margin: 0 0 8px 0;
+  font-size: 1rem;
+}
+
+.horarios-atencion p {
+  color: var(--muted);
+  margin: 0;
+}
+
+/* BOTÓN PAGAR */
+.btn-pagar {
+  width: 100%;
+  padding: 16px 24px;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.btn-pagar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-pagar:disabled:hover {
+  transform: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* SPINNER */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* CONFIRMACIÓN */
+.pago-confirmacion {
+  max-width: 600px;
+  margin: 60px auto;
+  text-align: center;
+  background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
+  border-radius: 16px;
+  padding: 48px 32px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e5e5e5;
+}
+
+.confirmacion-icon {
+  font-size: 5rem;
+  margin-bottom: 20px;
+  animation: scaleIn 0.5s ease;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.pago-confirmacion h2 {
+  color: var(--accent);
+  margin: 0 0 12px 0;
+  font-size: 2rem;
+}
+
+.pago-confirmacion > p {
+  color: var(--muted);
+  font-size: 1.1rem;
+  margin-bottom: 32px;
+}
+
+.confirmacion-detalles {
+  background: rgba(197, 154, 47, 0.08);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.confirmacion-detalles p {
+  margin: 12px 0;
+  color: var(--text);
+  font-size: 1rem;
+}
+
+.confirmacion-detalles strong {
+  color: var(--accent);
+  margin-right: 8px;
+}
+
+.texto-redireccion {
+  color: var(--muted);
+  font-style: italic;
+  animation: pulse 1.5s ease infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* RESPONSIVE */
+@media (max-width: 980px) {
+  .pago-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .pago-resumen {
+    order: -1;
+  }
+}
+
+@media (max-width: 600px) {
+  .pago-confirmacion {
+    padding: 32px 20px;
+  }
+  
+  .confirmacion-icon {
+    font-size: 4rem;
+  }
+  
+  .pago-confirmacion h2 {
+    font-size: 1.5rem;
+  }
+  
+  .opcion-pago {
+    padding: 12px;
+  }
+  
+  .opcion-precio {
+    font-size: 1.1rem;
+  }
+}
