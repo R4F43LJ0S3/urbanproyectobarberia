@@ -1,0 +1,288 @@
+/* ============================================
+   BARBEROS - ESTILOS CON DETECCIÓN AUTOMÁTICA
+   DE body.dark-mode
+   ============================================ */
+
+.barberos-page {
+  padding: 60px 20px;
+  min-height: 100vh;
+  transition: all 0.3s ease;
+  /* Por defecto MODO CLARO */
+  background-color: #f5f5f5;
+  color: #1a1a1a;
+}
+
+/* MODO OSCURO - Cuando body tiene la clase 'dark-mode' */
+body.dark-mode .barberos-page {
+  background-color: #0a0a0a;
+  color: #fff;
+}
+
+/* ============================================
+   CONTENEDOR PRINCIPAL
+   ============================================ */
+.barberos-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.barberos-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.barberos-header-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.barberos-titulo {
+  font-size: 3em;
+  margin: 0;
+  background: linear-gradient(135deg, #d4af37 0%, #f4e5b1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-weight: bold;
+}
+
+.barberos-descripcion {
+  font-size: 1.2em;
+  max-width: 600px;
+  margin: 0 auto;
+  color: #666; /* Modo claro por defecto */
+}
+
+body.dark-mode .barberos-descripcion {
+  color: #aaa;
+}
+
+/* ============================================
+   GRID DE BARBEROS
+   ============================================ */
+.barberos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+  justify-content: center;
+}
+
+/* ============================================
+   TARJETA DE BARBERO
+   ============================================ */
+.barbero-card {
+  border-radius: 20px;
+  padding: 30px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  /* Por defecto MODO CLARO */
+  background-color: #fff;
+  border: 2px solid #e0e0e0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .barbero-card {
+  background-color: #1a1a1a;
+  border: 2px solid #2a2a2a;
+  box-shadow: 0 10px 30px rgba(212, 175, 55, 0.1);
+}
+
+.barbero-card:hover {
+  transform: translateY(-10px);
+  border-color: #d4af37;
+  box-shadow: 0 15px 40px rgba(212, 175, 55, 0.2);
+}
+
+body.dark-mode .barbero-card:hover {
+  box-shadow: 0 15px 40px rgba(212, 175, 55, 0.3);
+}
+
+/* Decoración de fondo */
+.barbero-card::before {
+  content: '';
+  position: absolute;
+  top: -50px;
+  right: -50px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4af37 0%, transparent 70%);
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+/* ============================================
+   IMAGEN DEL BARBERO
+   ============================================ */
+.barbero-imagen-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.barbero-imagen-wrapper {
+  position: relative;
+  width: 150px;
+  height: 150px;
+}
+
+.barbero-imagen {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #d4af37;
+  box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+}
+
+.barbero-badge {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  background-color: #d4af37;
+  border-radius: 50%;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================
+   INFORMACIÓN DEL BARBERO
+   ============================================ */
+.barbero-nombre {
+  font-size: 1.5em;
+  margin: 0 0 10px 0;
+  text-align: center;
+  color: #1a1a1a; /* Modo claro por defecto */
+}
+
+body.dark-mode .barbero-nombre {
+  color: #fff;
+}
+
+.barbero-especialidad {
+  color: #d4af37;
+  font-style: italic;
+  font-size: 1.1em;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* ============================================
+   INFO ADICIONAL (EXPERIENCIA Y RATING)
+   ============================================ */
+.barbero-info {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0; /* Modo claro por defecto */
+}
+
+body.dark-mode .barbero-info {
+  border-top: 1px solid #333;
+}
+
+.barbero-info-item {
+  text-align: center;
+}
+
+.barbero-info-label {
+  margin: 0;
+  font-size: 0.9em;
+  color: #666; /* Modo claro por defecto */
+}
+
+body.dark-mode .barbero-info-label {
+  color: #888;
+}
+
+.barbero-info-value {
+  margin: 5px 0 0 0;
+  font-weight: bold;
+  color: #d4af37;
+}
+
+.barbero-rating {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 5px;
+  justify-content: center;
+}
+
+.barbero-rating-value {
+  font-weight: bold;
+  color: #d4af37;
+}
+
+/* ============================================
+   CALL TO ACTION
+   ============================================ */
+.barberos-cta {
+  text-align: center;
+  margin-top: 60px;
+}
+
+.barberos-cta-button {
+  background-color: #d4af37;
+  color: #1a1a1a;
+  border: none;
+  padding: 15px 40px;
+  font-size: 1.1em;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+}
+
+.barberos-cta-button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.5);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 768px) {
+  .barberos-titulo {
+    font-size: 2em;
+  }
+  
+  .barberos-descripcion {
+    font-size: 1em;
+  }
+  
+  .barberos-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+  
+  .barbero-card {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .barberos-page {
+    padding: 40px 15px;
+  }
+  
+  .barberos-titulo {
+    font-size: 1.5em;
+  }
+  
+  .barberos-header-icons {
+    gap: 10px;
+  }
+}

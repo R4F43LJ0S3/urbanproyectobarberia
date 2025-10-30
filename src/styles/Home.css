@@ -1,0 +1,329 @@
+/* HOME PAGE STYLES */
+:root {
+  --bg: #f7f7f7;
+  --card: #ffffff;
+  --text: #111;
+  --accent: #c59a2f;
+  --accent-dark: #111;
+  --muted: #6b6b6b;
+  --container: 1100px;
+  --shadow: rgba(0, 0, 0, 0.08);
+  --border: #e5e5e5;
+  --input-bg: #fafafa;
+  --nav-bg: #ffffff;
+  --footer-bg-start: #1a1a1a;
+  --footer-bg-end: #0d0d0d;
+}
+
+/* HERO */
+.hero {
+  padding: 28px 0;
+  background: transparent;
+}
+
+.hero-inner {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 24px;
+  align-items: center;
+}
+
+.hero-text {
+  background: transparent;
+}
+
+.title {
+  font-size: 2rem;
+  margin: 0 0 8px;
+  color: var(--text);
+}
+
+.subtitle {
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.hero-cta {
+  margin-bottom: 24px;
+}
+
+/* FEATURES */
+.features {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.feature {
+  background: var(--card);
+  backdrop-filter: blur(10px);
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px var(--shadow);
+  transition: all 0.3s ease;
+}
+
+.feature:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px var(--shadow);
+  border-color: var(--accent);
+}
+
+.feature h4 {
+  color: var(--accent);
+  margin-top: 0;
+}
+
+/* ESTILOS PARA LINKS EN FEATURES (Barberos expertos) */
+.features a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.features a:visited {
+  color: inherit;
+}
+
+.features a:hover {
+  opacity: 1; /* Mantener opacidad normal */
+}
+
+/* Asegurar que la tarjeta enlazada mantenga los estilos */
+.features a.feature {
+  display: block;
+}
+
+/* El título debe ser dorado SIEMPRE */
+.features a h4,
+.features .feature h4 {
+  color: var(--accent) !important;
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+/* El texto debe ser gris */
+.features a p,
+.features .feature p {
+  color: var(--muted);
+  font-size: 0.95em;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Modo oscuro */
+body.dark-mode .features a h4,
+body.dark-mode .features .feature h4 {
+  color: var(--accent) !important;
+}
+
+body.dark-mode .features a p,
+body.dark-mode .features .feature p {
+  color: #aaa;
+}
+
+body.dark-mode .features a.feature,
+body.dark-mode .feature {
+  background: #1a1a1a;
+  border-color: #333;
+}
+
+/* HERO MEDIA */
+.hero-media {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 15px 40px var(--shadow);
+}
+
+.hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  min-height: 300px;
+}
+
+.badge {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  z-index: 2;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* CARRUSEL */
+.carousel-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+}
+
+.carousel-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.carousel-slide.active {
+  opacity: 1;
+}
+
+.carousel-slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  min-height: 300px;
+}
+
+.carousel-dots {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.carousel-dots .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 0;
+}
+
+.carousel-dots .dot.active {
+  background: #fff;
+  width: 24px;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.5);
+}
+
+.carousel-dots .dot:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: scale(1.2);
+}
+
+/* ABOUT */
+.about {
+  padding: 40px 0;
+  background: transparent;
+}
+
+.about h2 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.about > p {
+  text-align: center;
+  color: var(--muted);
+  max-width: 700px;
+  margin: 0 auto 32px;
+}
+
+.about-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 12px;
+}
+
+.card {
+  background: var(--card);
+  padding: 0;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  transition: all 0.4s ease;
+  box-shadow: 0 8px 20px var(--shadow);
+}
+
+.card:hover {
+  transform: translateY(-10px) scale(1.02);
+  box-shadow: 0 20px 40px var(--shadow);
+  border-color: var(--accent);
+}
+
+.card-image {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+  background: var(--input-bg);
+}
+
+.card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.card:hover .card-image img {
+  transform: scale(1.15) rotate(2deg);
+}
+
+.card h3,
+.card p {
+  padding: 0 20px;
+}
+
+.card h3 {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: var(--accent);
+  font-size: 1.3rem;
+}
+
+.card p {
+  margin-bottom: 20px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* RESPONSIVE */
+@media (max-width: 980px) {
+  .hero-inner {
+    grid-template-columns: 1fr;
+  }
+  
+  .hero-media {
+    order: -1;
+    margin-bottom: 12px;
+  }
+  
+  .about-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .features {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .title {
+    font-size: 1.5rem;
+  }
+}
