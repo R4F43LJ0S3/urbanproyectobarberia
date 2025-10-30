@@ -23,7 +23,7 @@ function App() {
           <Route path="/contacto" element={<Contacto />} />
           <Route path="/login" element={<Login />} />
           
-          {/* 🔥 LÍNEA FALTANTE: AGREGAR LA RUTA BARBEROS 🔥 */}
+          {/* LÍNEA FALTANTE: AGREGAR LA RUTA BARBEROS */}
           <Route path="/barberos" element={<Barberos />} />
         </Routes>
       </div>

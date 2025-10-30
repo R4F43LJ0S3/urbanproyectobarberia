@@ -13,16 +13,12 @@ const Pago = () => {
 
   // Precios de servicios
   const precios = {
-    "Corte de Cabello": 25000,
-    "Corte de Cabello para Niños": 25000,
-    "Tratamiento Reparador Anticaida": 40000,
-    "Rapado": 15000,
-    "Afeitado de Cabeza": 20000,
-    "Alizado de Cabello": 35000,
-    "Arreglo de Barba": 25000,
-    "Perfilado de Barba": 25000,
-    "Afeitado de Barba": 20000,
-    "Tintura de Barba": 50000,
+    "Corte Sencillo": 25000,
+    "Corte + Cejas": 25000,
+    "Tratamiento Corte Premium (Cejas + Perfilado de Barba)": 40000,
+    "Perfilado de Barba": 15000,
+    "Corte + Tinturado de Cabello": 35000,
+    "Corte + Mascarilla": 35000,
   };
 
   const precioTotal = precios[citaData?.servicio] || 0;

@@ -422,3 +422,16 @@
     font-size: 1.1rem;
   }
 }
+/* Agregar al final de index.css */
+
+.badge-pagado {
+  display: inline-block;
+  background: linear-gradient(135deg, #4caf50, #66bb6a);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-left: 8px;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}

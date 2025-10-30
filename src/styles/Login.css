@@ -1,6 +1,5 @@
-/* ============================================
-   LOGIN PAGE - VARIABLES
-   ============================================ */
+  /* LOGIN PAGE - VARIABLES*/
+
 :root {
   --bg: #f7f7f7;
   --card: #ffffff;
@@ -17,17 +16,11 @@
   --footer-bg-end: #0d0d0d;
 }
 
-/* ============================================
-   PÁGINA DE LOGIN GENERAL
-   ============================================ */
 .login-page {
   padding: 40px 0;
   min-height: 60vh;
 }
 
-/* ============================================
-   BOTÓN VOLVER
-   ============================================ */
 .btn-volver {
   background: transparent;
   border: 2px solid var(--accent);
@@ -46,9 +39,6 @@
   transform: translateX(-5px);
 }
 
-/* ============================================
-   SELECCIÓN DE TIPO DE USUARIO
-   ============================================ */
 .tipo-usuario-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -100,9 +90,6 @@ body.dark-mode .tipo-usuario-card:hover {
   border-color: var(--accent);
 }
 
-/* ============================================
-   FORMULARIO DE LOGIN
-   ============================================ */
 .login-form {
   max-width: 400px;
   margin: 32px auto;
@@ -166,9 +153,6 @@ body.dark-mode .login-form input:focus {
   text-align: center;
 }
 
-/* ============================================
-   PANEL DE ADMINISTRADOR
-   ============================================ */
 .admin-panel {
   max-width: 900px;
   margin: 32px auto;
@@ -199,9 +183,6 @@ body.dark-mode .admin-panel {
   color: var(--accent);
 }
 
-/* ============================================
-   ESTADÍSTICAS (ADMIN)
-   ============================================ */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -278,9 +259,6 @@ body.dark-mode .admin-panel {
   font-size: 2rem;
 }
 
-/* ============================================
-   RESUMEN DE SERVICIOS
-   ============================================ */
 .servicios-resumen {
   background: var(--input-bg);
   border: 1px solid var(--border);
@@ -339,9 +317,6 @@ body.dark-mode .servicio-nombre {
   font-weight: bold;
 }
 
-/* ============================================
-   LISTADO DE CITAS
-   ============================================ */
 .citas-title {
   color: var(--accent);
   margin-top: 24px;
@@ -448,9 +423,6 @@ body.dark-mode .cita-notas {
   color: #aaa;
 }
 
-/* ============================================
-   PANEL DE CLIENTE
-   ============================================ */
 .cliente-panel {
   max-width: 700px;
   margin: 32px auto;
@@ -543,9 +515,8 @@ body.dark-mode .cita-hora-grande {
   color: #ddd;
 }
 
-/* ============================================
-   RESPONSIVE
-   ============================================ */
+
+   /*RESPONSIVE*/
 @media (max-width: 768px) {
   .admin-panel,
   .cliente-panel {

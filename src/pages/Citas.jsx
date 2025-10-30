@@ -51,8 +51,13 @@ const Citas = () => {
       return;
     }
 
-    // Redirigir a la página de pago con los datos de la cita
-    navigate("/pago", { state: { cita: form } });
+    // En lugar de guardar la cita directamente, redirigir a la página de pagos
+    // La cita se guardará después de confirmar el pago
+    navigate("/pago", { 
+      state: { 
+        cita: form 
+      } 
+    });
   };
 
   const eliminarCita = (id) => {
@@ -65,7 +70,7 @@ const Citas = () => {
     <main className="page citas-page container">
       <h2 className="page-title">Agendar una Cita</h2>
       <p className="page-subtitle">
-        Completa tus datos y procede al pago para confirmar tu reserva en Urban Barber.
+        Completa tus datos para reservar tu servicio en Urban Barber.
       </p>
 
       <div className="citas-layout">
@@ -132,7 +137,7 @@ const Citas = () => {
 
           <div className="form-actions">
             <button type="submit" className="btn primary">
-              Continuar al pago
+              Continuar al Pago
             </button>
             <button
               type="button"
@@ -168,7 +173,7 @@ const Citas = () => {
                     {cita.fecha} | {cita.hora}
                   </small>
                   {cita.pagado && (
-                    <span className="badge-pagado">✅ Pagado</span>
+                    <span className="badge-pagado">✓ Pagado</span>
                   )}
                   <div>
                     <button
