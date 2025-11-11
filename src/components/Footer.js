@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 const Footer = () => {
   return (
     <footer className="footer">
-      {/* SECCIÓN DE MAPA */}
+      {/* SECCIÓN DE MAPA CON DISEÑO HORIZONTAL */}
       <div className="footer-map-section">
         <div className="container">
           <h3 className="map-title">📍 Encuéntranos</h3>
@@ -23,6 +23,7 @@ const Footer = () => {
             ></iframe>
           </div>
           
+          {/* INFORMACIÓN DE CONTACTO - AHORA HORIZONTAL */}
           <div className="map-info">
             <div className="map-info-item">
               <span className="info-icon">📞</span>
@@ -31,6 +32,7 @@ const Footer = () => {
                 <p>300 456 7890</p>
               </div>
             </div>
+            
             <div className="map-info-item">
               <span className="info-icon">📧</span>
               <div>
@@ -38,6 +40,7 @@ const Footer = () => {
                 <p>contacto@urbanbarber.com</p>
               </div>
             </div>
+            
             <div className="map-info-item">
               <span className="info-icon">🕐</span>
               <div>
