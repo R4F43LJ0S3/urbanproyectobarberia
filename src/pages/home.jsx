@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../styles/Home.css";
+import imagen from "../assets/imagen-ambiente.png";
+import imagen2 from "../assets/imagen-productos.png";
+import imagen3 from "../assets/imagen-atencion.png";
 
 const Home = () => {
   const [currentIndex, setCurrentIndex] = useState(0);

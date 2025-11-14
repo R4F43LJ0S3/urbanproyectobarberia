@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, Link } from "react-router-dom";
+import logoFrase from "../assets/logo-frase.png";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
@@ -21,7 +22,7 @@ const Navbar = () => {
       <div className="nav-container container">
         <Link to="/" className="brand">
           <img 
-            src="/logo-frase.png" 
+            src={logoFrase}
             alt="UrbanBarber" 
             className="brand-logo"
           />
@@ -57,7 +58,6 @@ const Navbar = () => {
             Servicios
           </NavLink>
           
-          {/* 🔥 NUEVO: Link de Barberos 🔥 */}
           <NavLink 
             to="/barberos" 
             className={({ isActive }) => (isActive ? "active" : "")}
