@@ -1,6 +1,3 @@
-// src/models/Administrador.js
-// Clase Administrador que hereda de Usuario
-
 import Usuario from './Usuarios.js';
 
 class Administrador extends Usuario {

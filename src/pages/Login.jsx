@@ -1,103 +1,160 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Login.css";
-import Administrador from "../models/Administrador";
-import Cliente from "../models/Clientes";
-import Cita from "../models/Citas";
+import Usuario from "../models/Usuarios";
 
 const Login = () => {
-  const [tipoUsuario, setTipoUsuario] = useState("");
-  const [usuario, setUsuario] = useState("");
-  const [clave, setClave] = useState("");
-  const [adminLogueado, setAdminLogueado] = useState(null);
-  const [clienteLogueado, setClienteLogueado] = useState(null);
-  const [todasLasCitas, setTodasLasCitas] = useState([]);
-  
-  // Datos del cliente
-  const [datosCliente, setDatosCliente] = useState({
-    nombre: "",
-    apellido: "",
-    correo: "",
-    celular: ""
+  // ==========================================
+  // ESTADOS
+  // ==========================================
+  const [vista, setVista] = useState('login'); // 'login', 'register', 'profile'
+  const [usuarioActual, setUsuarioActual] = useState(null);
+  const [todosLosUsuarios, setTodosLosUsuarios] = useState([]);
+  const [misCitas, setMisCitas] = useState([]);
+
+  // Formulario de login
+  const [loginForm, setLoginForm] = useState({
+    username: '',
+    password: ''
   });
 
-  // Cargar citas cuando hay un usuario logueado
-  useEffect(() => {
-    if (adminLogueado) {
-      const citas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
-      setTodasLasCitas(citas);
-    }
-  }, [adminLogueado]);
+  // Formulario de registro
+  const [registerForm, setRegisterForm] = useState({
+    username: '',
+    correo: '',
+    password: '',
+    confirmPassword: '',
+    nombre: '',
+    apellido: '',
+    celular: ''
+  });
 
+  // ==========================================
+  // EFECTOS
+  // ==========================================
+  
+  // Cargar sesión al iniciar
   useEffect(() => {
-    if (clienteLogueado) {
-      const misCitas = clienteLogueado.obtenerMisCitas();
-      setTodasLasCitas(misCitas);
+    const user = Usuario.obtenerSesion();
+    if (user) {
+      setUsuarioActual(user);
+      setVista('profile');
+      cargarCitasDelUsuario(user.celular);
     }
-  }, [clienteLogueado]);
+    cargarTodosLosUsuarios();
+  }, []);
 
-  // 🎯 REFACTORIZADO: Autenticación de admin usando la clase
-  const handleSubmitAdmin = (e) => {
+  // ==========================================
+  // FUNCIONES
+  // ==========================================
+
+  const cargarTodosLosUsuarios = () => {
+    setTodosLosUsuarios(Usuario.obtenerTodos());
+  };
+
+  const cargarCitasDelUsuario = (celular) => {
+    const citas = Usuario.obtenerCitasDeUsuario(celular);
+    setMisCitas(citas);
+  };
+
+  // Manejar login
+  const handleLogin = (e) => {
     e.preventDefault();
     
-    const resultado = Administrador.autenticar(usuario, clave);
+    if (!loginForm.username || !loginForm.password) {
+      alert('❌ Por favor completa todos los campos');
+      return;
+    }
+
+    const resultado = Usuario.login(loginForm.username, loginForm.password);
     
-    if (resultado.exito) {
-      setAdminLogueado(resultado.admin);
+    if (resultado.success) {
+      setUsuarioActual(resultado.usuario);
+      setVista('profile');
+      setLoginForm({ username: '', password: '' });
+      cargarCitasDelUsuario(resultado.usuario.celular);
+      cargarTodosLosUsuarios();
     } else {
       alert(`❌ ${resultado.mensaje}`);
     }
   };
 
-  // 🎯 REFACTORIZADO: Autenticación de cliente usando la clase
-  const handleSubmitCliente = (e) => {
+  // Manejar registro
+  const handleRegister = (e) => {
     e.preventDefault();
-    
-    const resultado = Cliente.autenticarORegistrar(datosCliente);
-    
-    if (!resultado.exito) {
-      alert(`❌ ${resultado.mensaje}`);
+
+    // Validaciones
+    if (Object.values(registerForm).some(val => !val)) {
+      alert('❌ Por favor completa todos los campos');
       return;
     }
 
-    // Guardar cliente si no existe
-    const clientes = JSON.parse(localStorage.getItem("clientes") || "[]");
-    const clienteExiste = clientes.find(c => c.celular === datosCliente.celular);
-    
-    if (!clienteExiste) {
-      clientes.push(resultado.cliente.toJSON());
-      localStorage.setItem("clientes", JSON.stringify(clientes));
+    if (registerForm.password !== registerForm.confirmPassword) {
+      alert('❌ Las contraseñas no coinciden');
+      return;
     }
+
+    if (registerForm.password.length < 6) {
+      alert('❌ La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    if (registerForm.celular.length !== 10 || !registerForm.celular.startsWith('3')) {
+      alert('❌ El celular debe tener 10 dígitos y comenzar con 3');
+      return;
+    }
+
+    const resultado = Usuario.registrar(registerForm);
     
-    setClienteLogueado(resultado.cliente);
+    if (resultado.success) {
+      alert(`✅ ${resultado.mensaje}`);
+      setVista('login');
+      setRegisterForm({
+        username: '',
+        correo: '',
+        password: '',
+        confirmPassword: '',
+        nombre: '',
+        apellido: '',
+        celular: ''
+      });
+      cargarTodosLosUsuarios();
+    } else {
+      alert(`❌ ${resultado.mensaje}`);
+    }
   };
 
-  const cerrarSesion = () => {
-    setAdminLogueado(null);
-    setClienteLogueado(null);
-    setUsuario("");
-    setClave("");
-    setDatosCliente({ nombre: "", apellido: "", correo: "", celular: "" });
-    setTodasLasCitas([]);
-    setTipoUsuario("");
+  // Cerrar sesión
+  const handleLogout = () => {
+    Usuario.logout();
+    setUsuarioActual(null);
+    setMisCitas([]);
+    setVista('login');
   };
 
-  // 🎯 REFACTORIZADO: Eliminar cita usando método estático
+  // Exportar usuarios
+  const handleExportUsers = () => {
+    const resultado = Usuario.exportarATxt();
+    if (resultado.success) {
+      alert('✅ ¡Archivo de usuarios descargado!');
+    }
+  };
+
+  // Eliminar cita
   const eliminarCita = (id) => {
     if (window.confirm("¿Deseas eliminar esta cita?")) {
-      const resultado = Cita.eliminar(id);
-      if (resultado.exito) {
-        setTodasLasCitas(prev => prev.filter(c => c.id !== id));
+      try {
+        const citas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
+        const citasActualizadas = citas.filter(c => c.id !== id);
+        localStorage.setItem("citasBarberia", JSON.stringify(citasActualizadas));
+        setMisCitas(prev => prev.filter(c => c.id !== id));
+        alert('✅ Cita eliminada');
+      } catch (error) {
+        alert('❌ Error al eliminar la cita');
       }
     }
   };
 
-  const handleChangeCliente = (e) => {
-    setDatosCliente({
-      ...datosCliente,
-      [e.target.name]: e.target.value
-    });
-  };
-
+  // Formatear fecha
   const formatearFecha = (fecha) => {
     const date = new Date(fecha + 'T00:00:00');
     return date.toLocaleDateString('es-ES', { 
@@ -108,6 +165,7 @@ const Login = () => {
     });
   };
 
+  // Formatear hora
   const formatearHora = (hora) => {
     const [horas, minutos] = hora.split(':');
     const h = parseInt(horas);
@@ -116,138 +174,9 @@ const Login = () => {
     return `${hora12}:${minutos} ${ampm}`;
   };
 
-  // SELECCIÓN DE TIPO DE USUARIO
-  if (!tipoUsuario && !adminLogueado && !clienteLogueado) {
-    return (
-      <main className="page login-page container">
-        <h2 className="page-title">🔐 Inicio de sesión</h2>
-        <div className="tipo-usuario-container">
-          <div className="tipo-usuario-card" onClick={() => setTipoUsuario("admin")}>
-            <div className="tipo-usuario-icon">👨‍💼</div>
-            <h3>Administrador</h3>
-            <p>Gestiona todas las citas y el sistema</p>
-          </div>
-          <div className="tipo-usuario-card" onClick={() => setTipoUsuario("cliente")}>
-            <div className="tipo-usuario-icon">👤</div>
-            <h3>Cliente</h3>
-            <p>Consulta tus citas agendadas</p>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  // FORMULARIO DE ADMINISTRADOR
-  if (tipoUsuario === "admin" && !adminLogueado) {
-    return (
-      <main className="page login-page container">
-        <button className="btn-volver" onClick={() => setTipoUsuario("")}>
-          ← Volver
-        </button>
-        <h2 className="page-title">👨‍💼 Administrador</h2>
-        <form className="card login-form" onSubmit={handleSubmitAdmin}>
-          <label>
-            Usuario:
-            <input
-              type="text"
-              value={usuario}
-              onChange={(e) => setUsuario(e.target.value)}
-              placeholder="admin"
-              required
-            />
-          </label>
-          <label>
-            Contraseña:
-            <input
-              type="password"
-              value={clave}
-              onChange={(e) => setClave(e.target.value)}
-              placeholder="••••"
-              required
-            />
-          </label>
-          <button type="submit" className="btn primary">
-            Ingresar
-          </button>
-          <p className="hint-text">
-            💡 Credenciales por defecto: admin / 1234
-          </p>
-        </form>
-      </main>
-    );
-  }
-
-  // FORMULARIO DE CLIENTE
-  if (tipoUsuario === "cliente" && !clienteLogueado) {
-    return (
-      <main className="page login-page container">
-        <button className="btn-volver" onClick={() => setTipoUsuario("")}>
-          ← Volver
-        </button>
-        <h2 className="page-title">👤 Cliente</h2>
-        <form className="card login-form" onSubmit={handleSubmitCliente}>
-          <label>
-            Nombre:
-            <input
-              type="text"
-              name="nombre"
-              value={datosCliente.nombre}
-              onChange={handleChangeCliente}
-              placeholder="Tu nombre"
-              required
-            />
-          </label>
-          <label>
-            Apellido:
-            <input
-              type="text"
-              name="apellido"
-              value={datosCliente.apellido}
-              onChange={handleChangeCliente}
-              placeholder="Tu apellido"
-              required
-            />
-          </label>
-          <label>
-            Correo electrónico:
-            <input
-              type="email"
-              name="correo"
-              value={datosCliente.correo}
-              onChange={handleChangeCliente}
-              placeholder="ejemplo@correo.com"
-              required
-            />
-          </label>
-          <label>
-            Celular:
-            <input
-              type="tel"
-              name="celular"
-              value={datosCliente.celular}
-              onChange={handleChangeCliente}
-              placeholder="3001234567"
-              required
-            />
-          </label>
-          <button type="submit" className="btn primary">
-            Continuar
-          </button>
-          <p className="hint-text">
-            💡 Usa el celular que registraste al agendar tu cita
-          </p>
-        </form>
-      </main>
-    );
-  }
-
-  // PANEL DE ADMINISTRADOR
-  if (adminLogueado) {
-    // 🎯 REFACTORIZADO: Obtener estadísticas usando método de la clase
-    const estadisticas = adminLogueado.obtenerEstadisticas(todasLasCitas);
-
-    // Agrupar citas por fecha
-    const citasPorFecha = todasLasCitas.reduce((acc, cita) => {
+  // Agrupar citas por fecha
+  const agruparCitasPorFecha = (citas) => {
+    const citasPorFecha = citas.reduce((acc, cita) => {
       const fecha = cita.fecha;
       if (!acc[fecha]) {
         acc[fecha] = [];
@@ -260,61 +189,324 @@ const Login = () => {
       new Date(a) - new Date(b)
     );
 
+    return { citasPorFecha, fechasOrdenadas };
+  };
+
+  // ==========================================
+  // RENDERIZADO
+  // ==========================================
+
+  // VISTA DE LOGIN
+  if (vista === 'login') {
     return (
       <main className="page login-page container">
-        <div className="card admin-panel">
-          <div className="admin-header">
-            <h2>👨‍💼 Panel del Administrador</h2>
-            <button className="btn outline" onClick={cerrarSesion}>
-              Cerrar sesión
+        <h2 className="page-title">🔐 Iniciar Sesión</h2>
+        <p className="page-subtitle">Accede a tu cuenta de Urban Barber</p>
+
+        <div className="card login-form">
+          <div>
+            <label>
+              Usuario, Email o Celular
+              <input
+                type="text"
+                value={loginForm.username}
+                onChange={(e) => setLoginForm({
+                  ...loginForm,
+                  username: e.target.value
+                })}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') handleLogin(e);
+                }}
+                placeholder="Ingresa tu usuario, email o celular"
+              />
+            </label>
+
+            <label>
+              Contraseña
+              <input
+                type="password"
+                value={loginForm.password}
+                onChange={(e) => setLoginForm({
+                  ...loginForm,
+                  password: e.target.value
+                })}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') handleLogin(e);
+                }}
+                placeholder="Ingresa tu contraseña"
+              />
+            </label>
+
+            <button
+              onClick={handleLogin}
+              className="btn primary"
+            >
+              Iniciar Sesión
+            </button>
+
+            <div className="login-divider">
+              <p>¿No tienes cuenta?</p>
+              <button
+                onClick={() => setVista('register')}
+                className="btn outline"
+              >
+                Crear Cuenta Nueva
+              </button>
+            </div>
+
+            <p className="hint-text">
+              💡 Credenciales de admin: <strong>admin / 1234</strong>
+            </p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // VISTA DE REGISTRO
+  if (vista === 'register') {
+    return (
+      <main className="page login-page container">
+        <button className="btn-volver" onClick={() => setVista('login')}>
+          ← Volver al Login
+        </button>
+
+        <h2 className="page-title">✍️ Crear Cuenta Nueva</h2>
+        <p className="page-subtitle">Regístrate en Urban Barber</p>
+
+        <div className="card login-form register-form">
+          <div className="register-grid">
+            <label>
+              Usuario *
+              <input
+                type="text"
+                value={registerForm.username}
+                onChange={(e) => setRegisterForm({
+                  ...registerForm,
+                  username: e.target.value
+                })}
+                placeholder="Usuario único"
+              />
+            </label>
+
+            <label>
+              Email *
+              <input
+                type="email"
+                value={registerForm.correo}
+                onChange={(e) => setRegisterForm({
+                  ...registerForm,
+                  correo: e.target.value
+                })}
+                placeholder="correo@ejemplo.com"
+              />
+            </label>
+
+            <label>
+              Nombre *
+              <input
+                type="text"
+                value={registerForm.nombre}
+                onChange={(e) => setRegisterForm({
+                  ...registerForm,
+                  nombre: e.target.value
+                })}
+                placeholder="Tu nombre"
+              />
+            </label>
+
+            <label>
+              Apellido *
+              <input
+                type="text"
+                value={registerForm.apellido}
+                onChange={(e) => setRegisterForm({
+                  ...registerForm,
+                  apellido: e.target.value
+                })}
+                placeholder="Tu apellido"
+              />
+            </label>
+
+            <label>
+              Celular *
+              <input
+                type="tel"
+                value={registerForm.celular}
+                onChange={(e) => setRegisterForm({
+                  ...registerForm,
+                  celular: e.target.value
+                })}
+                maxLength="10"
+                placeholder="3001234567"
+              />
+            </label>
+
+            <label>
+              Contraseña *
+              <input
+                type="password"
+                value={registerForm.password}
+                onChange={(e) => setRegisterForm({
+                  ...registerForm,
+                  password: e.target.value
+                })}
+                placeholder="Mínimo 6 caracteres"
+              />
+            </label>
+
+            <label className="full-width">
+              Confirmar Contraseña *
+              <input
+                type="password"
+                value={registerForm.confirmPassword}
+                onChange={(e) => setRegisterForm({
+                  ...registerForm,
+                  confirmPassword: e.target.value
+                })}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') handleRegister(e);
+                }}
+                placeholder="Repite la contraseña"
+              />
+            </label>
+          </div>
+
+          <div className="form-actions">
+            <button onClick={handleRegister} className="btn primary">
+              Registrarse
+            </button>
+            <button onClick={() => setVista('login')} className="btn outline">
+              Cancelar
             </button>
           </div>
+        </div>
+      </main>
+    );
+  }
 
-          {/* ESTADÍSTICAS */}
-          <div className="stats-grid">
-            <div className="stat-card stat-total">
-              <p className="stat-number">{estadisticas.totalCitas}</p>
-              <p className="stat-label">Total de Citas</p>
+  // VISTA DE PERFIL
+  if (vista === 'profile' && usuarioActual) {
+    const esAdmin = usuarioActual.rol === 'admin';
+    const citasAMostrar = esAdmin ? 
+      JSON.parse(localStorage.getItem("citasBarberia") || "[]") : 
+      misCitas;
+    
+    const { citasPorFecha, fechasOrdenadas } = agruparCitasPorFecha(citasAMostrar);
+
+    return (
+      <main className="page login-page container">
+        {/* PERFIL */}
+        <div className="card admin-panel">
+          <div className="admin-header">
+            <h2>
+              {esAdmin ? '👨‍💼 Panel de Administrador' : '👤 Mi Perfil'}
+            </h2>
+            <div className="header-actions">
+              {esAdmin && (
+                <button
+                  onClick={handleExportUsers}
+                  className="btn outline"
+                  style={{ marginRight: '8px' }}
+                >
+                  📥 Exportar Usuarios
+                </button>
+              )}
+              <button onClick={handleLogout} className="btn outline">
+                Cerrar Sesión
+              </button>
             </div>
-            
-            {estadisticas.proximaCita ? (
-              <div className="stat-card stat-proxima">
-                <p className="stat-nombre">{estadisticas.proximaCita.nombre}</p>
-                <p className="stat-servicio">{estadisticas.proximaCita.servicio}</p>
-                <p className="stat-fecha">{formatearFecha(estadisticas.proximaCita.fecha)}</p>
-                <p className="stat-hora">🕐 {formatearHora(estadisticas.proximaCita.hora)}</p>
-                <p className="stat-label-small">Próxima Cita</p>
-              </div>
-            ) : (
-              <div className="stat-card stat-vacia">
-                <p className="stat-icon">📅</p>
-                <p className="stat-label">Sin citas próximas</p>
-              </div>
-            )}
           </div>
 
-          {/* RESUMEN DE SERVICIOS */}
-          {estadisticas.serviciosMasPopulares.length > 0 && (
-            <div className="servicios-resumen">
-              <h4>📊 Resumen de Servicios</h4>
-              <div className="servicios-grid">
-                {estadisticas.serviciosMasPopulares.map(([servicio, cantidad]) => (
-                  <div key={servicio} className="servicio-item">
-                    <span className="servicio-nombre">{servicio}</span>
-                    <span className="servicio-badge">{cantidad}</span>
+          {/* DATOS DEL USUARIO */}
+          <div className="perfil-info">
+            <div className="perfil-item">
+              <span className="perfil-label">Usuario</span>
+              <span className="perfil-value">@{usuarioActual.username}</span>
+            </div>
+            <div className="perfil-item">
+              <span className="perfil-label">Nombre Completo</span>
+              <span className="perfil-value">
+                {usuarioActual.nombre} {usuarioActual.apellido}
+              </span>
+            </div>
+            <div className="perfil-item">
+              <span className="perfil-label">Email</span>
+              <span className="perfil-value">{usuarioActual.correo}</span>
+            </div>
+            <div className="perfil-item">
+              <span className="perfil-label">Teléfono</span>
+              <span className="perfil-value">{usuarioActual.celular}</span>
+            </div>
+            <div className="perfil-item">
+              <span className="perfil-label">Fecha de Registro</span>
+              <span className="perfil-value">
+                {new Date(usuarioActual.fechaRegistro).toLocaleDateString('es-CO')}
+              </span>
+            </div>
+            <div className="perfil-item">
+              <span className="perfil-label">Rol</span>
+              <span className="perfil-badge">
+                {usuarioActual.rol.toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          {/* LISTA DE USUARIOS (Solo admin) */}
+          {esAdmin && (
+            <div className="usuarios-section">
+              <h3 className="citas-title">
+                👥 Usuarios Registrados ({todosLosUsuarios.length})
+              </h3>
+              <div className="usuarios-grid">
+                {todosLosUsuarios.map((user) => (
+                  <div
+                    key={user.id}
+                    className={`usuario-card ${user.id === usuarioActual.id ? 'usuario-actual' : ''}`}
+                  >
+                    <div className="usuario-header">
+                      <h4>
+                        {user.nombre} {user.apellido}
+                        {user.id === usuarioActual.id && (
+                          <span className="badge-tu">TÚ</span>
+                        )}
+                      </h4>
+                      <span className={`rol-badge rol-${user.rol}`}>
+                        {user.rol}
+                      </span>
+                    </div>
+                    <p className="usuario-info">
+                      @{user.username}
+                    </p>
+                    <p className="usuario-info">
+                      📧 {user.correo}
+                    </p>
+                    <p className="usuario-info">
+                      📞 {user.celular}
+                    </p>
+                    <p className="usuario-fecha">
+                      Registro: {new Date(user.fechaRegistro).toLocaleDateString('es-CO')}
+                    </p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          {/* LISTADO DE CITAS */}
-          <h3 className="citas-title">📅 Todas las Citas Registradas</h3>
-          
-          {todasLasCitas.length === 0 ? (
+          {/* CITAS */}
+          <h3 className="citas-title">
+            {esAdmin ? '📅 Todas las Citas Registradas' : '📅 Mis Citas'}
+            {' '}({citasAMostrar.length})
+          </h3>
+
+          {citasAMostrar.length === 0 ? (
             <div className="citas-vacio">
               <p className="citas-vacio-icon">📋</p>
-              <p>No hay citas registradas en el sistema.</p>
+              <p>
+                {esAdmin 
+                  ? 'No hay citas registradas en el sistema.' 
+                  : 'No tienes citas agendadas.'}
+              </p>
             </div>
           ) : (
             <>
@@ -333,6 +525,9 @@ const Login = () => {
                             <div className="cita-info">
                               <p className="cita-nombre">
                                 <strong>👤 {cita.nombre}</strong>
+                                {cita.pagado && (
+                                  <span className="badge-pagado">✓ Pagado</span>
+                                )}
                               </p>
                               <p className="cita-detalle">
                                 <strong>✂️ Servicio:</strong> {cita.servicio}
@@ -340,9 +535,11 @@ const Login = () => {
                               <p className="cita-detalle">
                                 <strong>🕐 Hora:</strong> {formatearHora(cita.hora)}
                               </p>
-                              <p className="cita-detalle">
-                                <strong>📞 Teléfono:</strong> {cita.telefono}
-                              </p>
+                              {esAdmin && (
+                                <p className="cita-detalle">
+                                  <strong>📞 Teléfono:</strong> {cita.telefono}
+                                </p>
+                              )}
                               {cita.notas && (
                                 <p className="cita-notas">
                                   <strong>📝 Notas:</strong> {cita.notas}
@@ -355,75 +552,6 @@ const Login = () => {
                             >
                               Eliminar
                             </button>
-                          </div>
-                        </li>
-                      ))}
-                  </ul>
-                </div>
-              ))}
-            </>
-          )}
-        </div>
-      </main>
-    );
-  }
-
-  // PANEL DE CLIENTE
-  if (clienteLogueado) {
-    const { citasPorFecha, fechasOrdenadas } = clienteLogueado.agruparCitasPorFecha(todasLasCitas);
-
-    return (
-      <main className="page login-page container">
-        <div className="card cliente-panel">
-          <div className="cliente-header">
-            <div>
-              <h2>👤 Mis Citas</h2>
-              <p className="cliente-nombre">
-                {clienteLogueado.getNombreCompleto()}
-              </p>
-            </div>
-            <button className="btn outline" onClick={cerrarSesion}>
-              Cerrar sesión
-            </button>
-          </div>
-
-          {todasLasCitas.length === 0 ? (
-            <div className="citas-vacio">
-              <p className="citas-vacio-icon">📅</p>
-              <p>No tienes citas agendadas con este número de celular.</p>
-              <p className="hint-text">
-                Agenda una nueva cita desde la sección de "Citas"
-              </p>
-            </div>
-          ) : (
-            <>
-              <p className="citas-count">
-                Tienes <strong>{todasLasCitas.length}</strong> cita{todasLasCitas.length !== 1 ? 's' : ''} agendada{todasLasCitas.length !== 1 ? 's' : ''}
-              </p>
-              
-              {fechasOrdenadas.map((fecha) => (
-                <div key={fecha} className="fecha-grupo">
-                  <h4 className="fecha-header">
-                    📅 {formatearFecha(fecha)}
-                  </h4>
-                  
-                  <ul className="citas-lista">
-                    {citasPorFecha[fecha]
-                      .sort((a, b) => a.hora.localeCompare(b.hora))
-                      .map((cita) => (
-                        <li key={cita.id} className="cita-item-cliente">
-                          <div className="cita-info-cliente">
-                            <p className="cita-servicio-grande">
-                              ✂️ {cita.servicio}
-                            </p>
-                            <p className="cita-hora-grande">
-                              🕐 {formatearHora(cita.hora)}
-                            </p>
-                            {cita.notas && (
-                              <p className="cita-notas">
-                                <strong>📝 Notas:</strong> {cita.notas}
-                              </p>
-                            )}
                           </div>
                         </li>
                       ))}

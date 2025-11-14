@@ -2,9 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Citas.css";
 import Cita from "../models/Citas";
+import Usuario from "../models/Usuarios";
 
 const Citas = () => {
   const navigate = useNavigate();
+  const [usuarioActual, setUsuarioActual] = useState(null);
+  
   const [form, setForm] = useState({
     nombre: "",
     telefono: "",
@@ -15,8 +18,21 @@ const Citas = () => {
   });
   const [citas, setCitas] = useState([]);
 
-  // Cargar citas almacenadas al iniciar
+  // Cargar usuario y citas al iniciar
   useEffect(() => {
+    // Verificar si hay sesión activa
+    const user = Usuario.obtenerSesion();
+    if (user) {
+      setUsuarioActual(user);
+      // Pre-llenar el formulario con datos del usuario
+      setForm(prev => ({
+        ...prev,
+        nombre: `${user.nombre} ${user.apellido}`,
+        telefono: user.celular
+      }));
+    }
+
+    // Cargar citas
     const stored = localStorage.getItem("citasBarberia");
     if (stored) {
       setCitas(JSON.parse(stored));
@@ -32,11 +48,25 @@ const Citas = () => {
     "Corte + Mascarilla",
   ];
 
-  // 🎯 REFACTORIZADO: Usar método estático de la clase Cita
+  // Crear cita
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Crear y validar cita usando la clase
+    // Si no hay usuario logueado, mostrar mensaje
+    if (!usuarioActual) {
+      const continuar = window.confirm(
+        '⚠️ No has iniciado sesión.\n\n' +
+        '¿Deseas continuar sin cuenta? (No podrás ver tu historial de citas)\n\n' +
+        'Presiona "Aceptar" para continuar o "Cancelar" para iniciar sesión.'
+      );
+      
+      if (!continuar) {
+        navigate('/login');
+        return;
+      }
+    }
+
+    // Crear y validar cita
     const resultado = Cita.crearDesdeFomulario(form);
 
     if (!resultado.valido) {
@@ -44,7 +74,7 @@ const Citas = () => {
       return;
     }
 
-    // Redirigir a la página de pagos con la cita validada
+    // Redirigir al pago
     navigate("/pago", { 
       state: { 
         cita: resultado.cita.toJSON()
@@ -52,12 +82,13 @@ const Citas = () => {
     });
   };
 
-  // 🎯 REFACTORIZADO: Usar método estático para eliminar
+  // Eliminar cita
   const eliminarCita = (id) => {
     if (window.confirm("¿Deseas eliminar esta cita?")) {
       const resultado = Cita.eliminar(id);
       if (resultado.exito) {
         setCitas(prev => prev.filter(c => c.id !== id));
+        alert('✅ Cita eliminada correctamente');
       } else {
         alert(`❌ ${resultado.mensaje}`);
       }
@@ -68,19 +99,65 @@ const Citas = () => {
     <main className="page citas-page container">
       <h2 className="page-title">Agendar una Cita</h2>
       <p className="page-subtitle">
-        Completa tus datos para reservar tu servicio en Urban Barber.
+        {usuarioActual 
+          ? `¡Hola ${usuarioActual.nombre}! Agenda tu cita en Urban Barber.`
+          : 'Completa tus datos para reservar tu servicio en Urban Barber.'}
       </p>
+
+      {/* ALERTA DE USUARIO */}
+      {!usuarioActual && (
+        <div style={{
+          background: 'linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%)',
+          border: '2px solid #ffd966',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '24px',
+          textAlign: 'center'
+        }}>
+          <p style={{ margin: 0, color: '#666' }}>
+            💡 <strong>¿Tienes cuenta?</strong> 
+            <button
+              onClick={() => navigate('/login')}
+              style={{
+                marginLeft: '8px',
+                background: '#c59a2f',
+                color: 'white',
+                border: 'none',
+                padding: '6px 16px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontWeight: '600'
+              }}
+            >
+              Iniciar Sesión
+            </button>
+          </p>
+          <p style={{ margin: '8px 0 0', color: '#999', fontSize: '0.9rem' }}>
+            Inicia sesión para ver tu historial de citas
+          </p>
+        </div>
+      )}
 
       <div className="citas-layout">
         {/* FORMULARIO */}
-        <form className="card form" onSubmit={handleSubmit}>
+        <div className="card form">
           <label>
             Nombre completo *
             <input
               type="text"
               value={form.nombre}
               onChange={(e) => setForm({ ...form, nombre: e.target.value })}
+              disabled={!!usuarioActual}
+              style={{
+                background: usuarioActual ? '#f5f5f5' : 'var(--input-bg)',
+                cursor: usuarioActual ? 'not-allowed' : 'text'
+              }}
             />
+            {usuarioActual && (
+              <small style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
+                Datos tomados de tu perfil
+              </small>
+            )}
           </label>
 
           <label>
@@ -91,6 +168,11 @@ const Citas = () => {
               onChange={(e) => setForm({ ...form, telefono: e.target.value })}
               maxLength="10"
               placeholder="3001234567"
+              disabled={!!usuarioActual}
+              style={{
+                background: usuarioActual ? '#f5f5f5' : 'var(--input-bg)',
+                cursor: usuarioActual ? 'not-allowed' : 'text'
+              }}
             />
           </label>
 
@@ -144,7 +226,7 @@ const Citas = () => {
           </label>
 
           <div className="form-actions">
-            <button type="submit" className="btn primary">
+            <button onClick={handleSubmit} className="btn primary">
               Continuar al Pago
             </button>
             <button
@@ -152,8 +234,8 @@ const Citas = () => {
               className="btn outline"
               onClick={() =>
                 setForm({
-                  nombre: "",
-                  telefono: "",
+                  nombre: usuarioActual ? `${usuarioActual.nombre} ${usuarioActual.apellido}` : "",
+                  telefono: usuarioActual ? usuarioActual.celular : "",
                   servicio: "",
                   fecha: "",
                   hora: "",
@@ -164,7 +246,7 @@ const Citas = () => {
               Limpiar
             </button>
           </div>
-        </form>
+        </div>
 
         {/* LISTADO DE CITAS */}
         <div className="card citas-list">
