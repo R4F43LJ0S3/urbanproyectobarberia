@@ -1,3 +1,6 @@
+// src/models/Citas.js
+// Clase para gestionar citas
+
 class Cita {
   constructor(id, clienteId, barberoId, servicioId, fecha, hora, notas = "") {
     this.id = id;
@@ -7,7 +10,7 @@ class Cita {
     this.fecha = fecha; // formato: YYYY-MM-DD
     this.hora = hora; // formato: HH:MM
     this.notas = notas;
-    this.estado = "pendiente"; // pendiente, confirmada, cancelada, completada
+    this.estado = "pendiente";
     this.pagado = false;
     this.fechaCreacion = new Date().toISOString();
   }
@@ -99,6 +102,99 @@ class Cita {
     return horasHasta > 0 && horasHasta <= 24;
   }
 
+  // ✨ NUEVO: Método estático para crear cita desde formulario
+  static crearDesdeFomulario(formData) {
+    const { nombre, telefono, servicio, fecha, hora, notas } = formData;
+
+    // Validaciones básicas del formulario
+    if (!nombre || nombre.trim().length < 2) {
+      return {
+        valido: false,
+        mensaje: "El nombre debe tener al menos 2 caracteres"
+      };
+    }
+
+    if (!telefono || telefono.length !== 10) {
+      return {
+        valido: false,
+        mensaje: "El teléfono debe tener 10 dígitos"
+      };
+    }
+
+    if (!servicio) {
+      return {
+        valido: false,
+        mensaje: "Debes seleccionar un servicio"
+      };
+    }
+
+    if (!fecha) {
+      return {
+        valido: false,
+        mensaje: "Debes seleccionar una fecha"
+      };
+    }
+
+    if (!hora) {
+      return {
+        valido: false,
+        mensaje: "Debes seleccionar una hora"
+      };
+    }
+
+    // Crear instancia de la cita
+    const cita = new Cita(
+      Date.now(),
+      telefono, // Usamos el teléfono como clienteId
+      "barbero_default", // Por ahora un barbero por defecto
+      servicio,
+      fecha,
+      hora,
+      notas || ""
+    );
+
+    // Agregar datos adicionales del formulario
+    cita.nombre = nombre;
+    cita.telefono = telefono;
+    cita.servicio = servicio;
+
+    // Validar la cita completa
+    const validacion = cita.validar();
+    if (!validacion.valido) {
+      return validacion;
+    }
+
+    return {
+      valido: true,
+      mensaje: "Cita creada exitosamente",
+      cita: cita
+    };
+  }
+
+  // ✨ NUEVO: Guardar cita en localStorage
+  guardar() {
+    try {
+      const citas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
+      citas.unshift(this.toJSON());
+      localStorage.setItem("citasBarberia", JSON.stringify(citas));
+      return { exito: true, mensaje: "Cita guardada exitosamente" };
+    } catch (error) {
+      return { exito: false, mensaje: "Error al guardar la cita" };
+    }
+  }
+
+  // ✨ NUEVO: Método estático para eliminar cita
+  static eliminar(id) {
+    try {
+      const citas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
+      const citasActualizadas = citas.filter(c => c.id !== id);
+      localStorage.setItem("citasBarberia", JSON.stringify(citasActualizadas));
+      return { exito: true, mensaje: "Cita eliminada exitosamente" };
+    } catch (error) {
+      return { exito: false, mensaje: "Error al eliminar la cita" };
+    }
+  }
+
   toJSON() {
     return {
       id: this.id,
@@ -110,7 +206,11 @@ class Cita {
       notas: this.notas,
       estado: this.estado,
       pagado: this.pagado,
-      fechaCreacion: this.fechaCreacion
+      fechaCreacion: this.fechaCreacion,
+      // Campos adicionales del formulario
+      nombre: this.nombre,
+      telefono: this.telefono,
+      servicio: this.servicio
     };
   }
 }

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Login.css";
+import Administrador from "../models/Administrador";
+import Cliente from "../models/Clientes";
 
 const Login = () => {
-  const [tipoUsuario, setTipoUsuario] = useState(""); // "admin" o "cliente"
+  const [tipoUsuario, setTipoUsuario] = useState("");
   const [usuario, setUsuario] = useState("");
   const [clave, setClave] = useState("");
-  const [logueado, setLogueado] = useState(false);
+  const [adminLogueado, setAdminLogueado] = useState(null);
+  const [clienteLogueado, setClienteLogueado] = useState(null);
   const [todasLasCitas, setTodasLasCitas] = useState([]);
   
   // Datos del cliente
@@ -15,52 +18,61 @@ const Login = () => {
     correo: "",
     celular: ""
   });
-  const [clienteLogueado, setClienteLogueado] = useState(false);
 
-  // Cargar todas las citas cuando el admin está logueado
+  // Cargar citas cuando hay un usuario logueado
   useEffect(() => {
-    if (logueado && tipoUsuario === "admin") {
+    if (adminLogueado) {
       const citas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
       setTodasLasCitas(citas);
     }
-  }, [logueado, tipoUsuario]);
+  }, [adminLogueado]);
 
-  // Cargar citas del cliente cuando está logueado
   useEffect(() => {
     if (clienteLogueado) {
-      const citas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
-      const citasCliente = citas.filter(
-        (cita) => cita.telefono === datosCliente.celular
-      );
-      setTodasLasCitas(citasCliente);
+      const misCitas = clienteLogueado.obtenerMisCitas();
+      setTodasLasCitas(misCitas);
     }
-  }, [clienteLogueado, datosCliente.celular]);
+  }, [clienteLogueado]);
 
+  // 🎯 REFACTORIZADO: Autenticación de admin usando la clase
   const handleSubmitAdmin = (e) => {
     e.preventDefault();
-    if (usuario === "admin" && clave === "1234") {
-      setLogueado(true);
+    
+    const resultado = Administrador.autenticar(usuario, clave);
+    
+    if (resultado.exito) {
+      setAdminLogueado(resultado.admin);
     } else {
-      alert("❌ Usuario o contraseña incorrectos");
+      alert(`❌ ${resultado.mensaje}`);
     }
   };
 
+  // 🎯 REFACTORIZADO: Autenticación de cliente usando la clase
   const handleSubmitCliente = (e) => {
     e.preventDefault();
+    
+    const resultado = Cliente.autenticarORegistrar(datosCliente);
+    
+    if (!resultado.exito) {
+      alert(`❌ ${resultado.mensaje}`);
+      return;
+    }
+
+    // Guardar cliente si no existe
     const clientes = JSON.parse(localStorage.getItem("clientes") || "[]");
     const clienteExiste = clientes.find(c => c.celular === datosCliente.celular);
     
     if (!clienteExiste) {
-      clientes.push(datosCliente);
+      clientes.push(resultado.cliente.toJSON());
       localStorage.setItem("clientes", JSON.stringify(clientes));
     }
     
-    setClienteLogueado(true);
+    setClienteLogueado(resultado.cliente);
   };
 
   const cerrarSesion = () => {
-    setLogueado(false);
-    setClienteLogueado(false);
+    setAdminLogueado(null);
+    setClienteLogueado(null);
     setUsuario("");
     setClave("");
     setDatosCliente({ nombre: "", apellido: "", correo: "", celular: "" });
@@ -68,13 +80,13 @@ const Login = () => {
     setTipoUsuario("");
   };
 
+  // 🎯 REFACTORIZADO: Eliminar cita usando método estático
   const eliminarCita = (id) => {
     if (window.confirm("¿Deseas eliminar esta cita?")) {
-      const citasActualizadas = todasLasCitas.filter((c) => c.id !== id);
-      const todasCitas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
-      const citasFinales = todasCitas.filter((c) => c.id !== id);
-      localStorage.setItem("citasBarberia", JSON.stringify(citasFinales));
-      setTodasLasCitas(citasActualizadas);
+      const resultado = Cita.eliminar(id);
+      if (resultado.exito) {
+        setTodasLasCitas(prev => prev.filter(c => c.id !== id));
+      }
     }
   };
 
@@ -103,42 +115,8 @@ const Login = () => {
     return `${hora12}:${minutos} ${ampm}`;
   };
 
-  // Agrupar citas por fecha
-  const citasPorFecha = todasLasCitas.reduce((acc, cita) => {
-    const fecha = cita.fecha;
-    if (!acc[fecha]) {
-      acc[fecha] = [];
-    }
-    acc[fecha].push(cita);
-    return acc;
-  }, {});
-
-  const fechasOrdenadas = Object.keys(citasPorFecha).sort((a, b) => new Date(a) - new Date(b));
-
-  // Estadísticas
-  const totalCitas = todasLasCitas.length;
-  const serviciosMasPopulares = todasLasCitas.reduce((acc, cita) => {
-    const servicio = cita.servicio;
-    if (servicio) {
-      acc[servicio] = (acc[servicio] || 0) + 1;
-    }
-    return acc;
-  }, {});
-  const serviciosOrdenados = Object.entries(serviciosMasPopulares).sort((a, b) => b[1] - a[1]);
-  
-  const ahora = new Date();
-  const citasFuturas = todasLasCitas.filter(cita => {
-    const fechaCita = new Date(cita.fecha + 'T' + cita.hora);
-    return fechaCita > ahora;
-  }).sort((a, b) => {
-    const fechaA = new Date(a.fecha + 'T' + a.hora);
-    const fechaB = new Date(b.fecha + 'T' + b.hora);
-    return fechaA - fechaB;
-  });
-  const proximaCita = citasFuturas.length > 0 ? citasFuturas[0] : null;
-
   // SELECCIÓN DE TIPO DE USUARIO
-  if (!tipoUsuario && !logueado && !clienteLogueado) {
+  if (!tipoUsuario && !adminLogueado && !clienteLogueado) {
     return (
       <main className="page login-page container">
         <h2 className="page-title">🔐 Inicio de sesión</h2>
@@ -159,7 +137,7 @@ const Login = () => {
   }
 
   // FORMULARIO DE ADMINISTRADOR
-  if (tipoUsuario === "admin" && !logueado) {
+  if (tipoUsuario === "admin" && !adminLogueado) {
     return (
       <main className="page login-page container">
         <button className="btn-volver" onClick={() => setTipoUsuario("")}>
@@ -263,7 +241,24 @@ const Login = () => {
   }
 
   // PANEL DE ADMINISTRADOR
-  if (logueado && tipoUsuario === "admin") {
+  if (adminLogueado) {
+    // 🎯 REFACTORIZADO: Obtener estadísticas usando método de la clase
+    const estadisticas = adminLogueado.obtenerEstadisticas(todasLasCitas);
+
+    // Agrupar citas por fecha
+    const citasPorFecha = todasLasCitas.reduce((acc, cita) => {
+      const fecha = cita.fecha;
+      if (!acc[fecha]) {
+        acc[fecha] = [];
+      }
+      acc[fecha].push(cita);
+      return acc;
+    }, {});
+
+    const fechasOrdenadas = Object.keys(citasPorFecha).sort((a, b) => 
+      new Date(a) - new Date(b)
+    );
+
     return (
       <main className="page login-page container">
         <div className="card admin-panel">
@@ -277,16 +272,16 @@ const Login = () => {
           {/* ESTADÍSTICAS */}
           <div className="stats-grid">
             <div className="stat-card stat-total">
-              <p className="stat-number">{totalCitas}</p>
+              <p className="stat-number">{estadisticas.totalCitas}</p>
               <p className="stat-label">Total de Citas</p>
             </div>
             
-            {proximaCita ? (
+            {estadisticas.proximaCita ? (
               <div className="stat-card stat-proxima">
-                <p className="stat-nombre">{proximaCita.nombre}</p>
-                <p className="stat-servicio">{proximaCita.servicio}</p>
-                <p className="stat-fecha">{formatearFecha(proximaCita.fecha)}</p>
-                <p className="stat-hora">🕐 {formatearHora(proximaCita.hora)}</p>
+                <p className="stat-nombre">{estadisticas.proximaCita.nombre}</p>
+                <p className="stat-servicio">{estadisticas.proximaCita.servicio}</p>
+                <p className="stat-fecha">{formatearFecha(estadisticas.proximaCita.fecha)}</p>
+                <p className="stat-hora">🕐 {formatearHora(estadisticas.proximaCita.hora)}</p>
                 <p className="stat-label-small">Próxima Cita</p>
               </div>
             ) : (
@@ -298,11 +293,11 @@ const Login = () => {
           </div>
 
           {/* RESUMEN DE SERVICIOS */}
-          {Object.keys(serviciosMasPopulares).length > 0 && (
+          {estadisticas.serviciosMasPopulares.length > 0 && (
             <div className="servicios-resumen">
               <h4>📊 Resumen de Servicios</h4>
               <div className="servicios-grid">
-                {serviciosOrdenados.map(([servicio, cantidad]) => (
+                {estadisticas.serviciosMasPopulares.map(([servicio, cantidad]) => (
                   <div key={servicio} className="servicio-item">
                     <span className="servicio-nombre">{servicio}</span>
                     <span className="servicio-badge">{cantidad}</span>
@@ -374,6 +369,8 @@ const Login = () => {
 
   // PANEL DE CLIENTE
   if (clienteLogueado) {
+    const { citasPorFecha, fechasOrdenadas } = clienteLogueado.agruparCitasPorFecha(todasLasCitas);
+
     return (
       <main className="page login-page container">
         <div className="card cliente-panel">
@@ -381,7 +378,7 @@ const Login = () => {
             <div>
               <h2>👤 Mis Citas</h2>
               <p className="cliente-nombre">
-                {datosCliente.nombre} {datosCliente.apellido}
+                {clienteLogueado.getNombreCompleto()}
               </p>
             </div>
             <button className="btn outline" onClick={cerrarSesion}>

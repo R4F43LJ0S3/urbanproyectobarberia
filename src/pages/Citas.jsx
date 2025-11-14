@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/Citas.css";
+import Cita from "../models/Citas";
 
 const Citas = () => {
   const navigate = useNavigate();
@@ -22,11 +23,6 @@ const Citas = () => {
     }
   }, []);
 
-  // Guardar automáticamente al cambiar citas
-  useEffect(() => {
-    localStorage.setItem("citasBarberia", JSON.stringify(citas));
-  }, [citas]);
-
   const servicios = [
     "Corte Sencillo",
     "Corte + Cejas",
@@ -36,33 +32,35 @@ const Citas = () => {
     "Corte + Mascarilla",
   ];
 
+  // 🎯 REFACTORIZADO: Usar método estático de la clase Cita
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validación básica
-    if (
-      !form.nombre ||
-      !form.telefono ||
-      !form.servicio ||
-      !form.fecha ||
-      !form.hora
-    ) {
-      alert("Por favor completa todos los campos obligatorios.");
+    // Crear y validar cita usando la clase
+    const resultado = Cita.crearDesdeFomulario(form);
+
+    if (!resultado.valido) {
+      alert(`❌ ${resultado.mensaje}`);
       return;
     }
 
-    // En lugar de guardar la cita directamente, redirigir a la página de pagos
-    // La cita se guardará después de confirmar el pago
+    // Redirigir a la página de pagos con la cita validada
     navigate("/pago", { 
       state: { 
-        cita: form 
+        cita: resultado.cita.toJSON()
       } 
     });
   };
 
+  // 🎯 REFACTORIZADO: Usar método estático para eliminar
   const eliminarCita = (id) => {
     if (window.confirm("¿Deseas eliminar esta cita?")) {
-      setCitas((prev) => prev.filter((c) => c.id !== id));
+      const resultado = Cita.eliminar(id);
+      if (resultado.exito) {
+        setCitas(prev => prev.filter(c => c.id !== id));
+      } else {
+        alert(`❌ ${resultado.mensaje}`);
+      }
     }
   };
 
@@ -91,6 +89,8 @@ const Citas = () => {
               type="text"
               value={form.telefono}
               onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+              maxLength="10"
+              placeholder="3001234567"
             />
           </label>
 
@@ -115,6 +115,7 @@ const Citas = () => {
               type="date"
               value={form.fecha}
               onChange={(e) => setForm({ ...form, fecha: e.target.value })}
+              min={new Date().toISOString().split('T')[0]}
             />
           </label>
 
@@ -124,6 +125,8 @@ const Citas = () => {
               type="time"
               value={form.hora}
               onChange={(e) => setForm({ ...form, hora: e.target.value })}
+              min="07:00"
+              max="22:00"
             />
           </label>
 
@@ -132,7 +135,12 @@ const Citas = () => {
             <textarea
               value={form.notas}
               onChange={(e) => setForm({ ...form, notas: e.target.value })}
+              maxLength="200"
+              placeholder="Máximo 200 caracteres"
             />
+            <small style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
+              {form.notas.length}/200 caracteres
+            </small>
           </label>
 
           <div className="form-actions">

@@ -23,7 +23,6 @@ class Cliente extends Usuario {
     if (!validacionBase.valido) {
       return validacionBase;
     }
-
     return this.validarDireccion();
   }
 
@@ -41,6 +40,79 @@ class Cliente extends Usuario {
   // Verificar si es cliente frecuente (más de 5 citas)
   esClienteFrecuente() {
     return this.citasAgendadas.length >= 5;
+  }
+
+  // ✨ NUEVO: Método estático para registrar/autenticar cliente
+  static autenticarORegistrar(datosCliente) {
+    const { nombre, apellido, correo, celular } = datosCliente;
+
+    // Crear instancia del cliente
+    const cliente = new Cliente(
+      nombre,
+      apellido,
+      correo,
+      celular,
+      "temp123", // Password temporal
+      ""
+    );
+
+    // Validar datos básicos
+    if (!nombre || nombre.trim().length < 2) {
+      return {
+        exito: false,
+        mensaje: "El nombre debe tener al menos 2 caracteres"
+      };
+    }
+
+    if (!celular || celular.length !== 10 || !celular.startsWith('3')) {
+      return {
+        exito: false,
+        mensaje: "El celular debe tener 10 dígitos y comenzar con 3"
+      };
+    }
+
+    if (!correo || !correo.includes('@')) {
+      return {
+        exito: false,
+        mensaje: "Ingresa un correo válido"
+      };
+    }
+
+    return {
+      exito: true,
+      mensaje: "Cliente autenticado correctamente",
+      cliente: cliente
+    };
+  }
+
+  // ✨ NUEVO: Obtener citas del cliente desde localStorage
+  obtenerMisCitas() {
+    try {
+      const todasLasCitas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
+      return todasLasCitas.filter(cita => cita.telefono === this.celular);
+    } catch (error) {
+      console.error("Error al obtener citas:", error);
+      return [];
+    }
+  }
+
+  // ✨ NUEVO: Agrupar citas por fecha
+  agruparCitasPorFecha(citas) {
+    const citasPorFecha = citas.reduce((acc, cita) => {
+      const fecha = cita.fecha;
+      if (!acc[fecha]) {
+        acc[fecha] = [];
+      }
+      acc[fecha].push(cita);
+      return acc;
+    }, {});
+
+    // Ordenar fechas
+    const fechasOrdenadas = Object.keys(citasPorFecha).sort((a, b) => 
+      new Date(a) - new Date(b)
+    );
+
+    return { citasPorFecha, fechasOrdenadas };
   }
 
   toJSON() {
