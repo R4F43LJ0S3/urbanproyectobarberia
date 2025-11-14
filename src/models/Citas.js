@@ -35,7 +35,7 @@ class Cita {
     }
 
     // Validar horario de atención (7:00 AM - 10:00 PM)
-    const [horas, minutos] = this.hora.split(':').map(Number);
+    const [horas] = this.hora.split(':').map(Number);
     if (horas < 7 || horas >= 22) {
       return { valido: false, mensaje: "El horario de atención es de 7:00 AM a 10:00 PM" };
     }

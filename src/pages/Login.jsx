@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import "../styles/Login.css";
 import Administrador from "../models/Administrador";
 import Cliente from "../models/Clientes";
+import Cita from "../models/Citas";
 
 const Login = () => {
   const [tipoUsuario, setTipoUsuario] = useState("");
