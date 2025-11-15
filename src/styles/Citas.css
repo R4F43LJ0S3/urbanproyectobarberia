@@ -20,11 +20,24 @@
   min-height: 60vh;
 }
 
+/* LAYOUT CON 2 COLUMNAS (cuando hay sesión) */
 .citas-layout {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 32px;
   margin-top: 32px;
+}
+
+/* LAYOUT CENTRADO (cuando NO hay sesión) */
+.citas-layout-centered {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.citas-layout-centered .form {
+  max-width: 600px;
+  width: 100%;
 }
 
 .badge-pagado {
@@ -124,5 +137,9 @@
 @media (max-width: 980px) {
   .citas-layout {
     grid-template-columns: 1fr;
+  }
+  
+  .citas-layout-centered {
+    padding: 0 16px;
   }
 }

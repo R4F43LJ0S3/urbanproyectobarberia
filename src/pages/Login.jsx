@@ -192,10 +192,6 @@ const Login = () => {
     return { citasPorFecha, fechasOrdenadas };
   };
 
-  // ==========================================
-  // RENDERIZADO
-  // ==========================================
-
   // VISTA DE LOGIN
   if (vista === 'login') {
     return (
@@ -388,9 +384,11 @@ const Login = () => {
   // VISTA DE PERFIL
   if (vista === 'profile' && usuarioActual) {
     const esAdmin = usuarioActual.rol === 'admin';
+    // ADMIN: Ve todas las citas
+    // USUARIO NORMAL: Solo ve sus propias citas
     const citasAMostrar = esAdmin ? 
       JSON.parse(localStorage.getItem("citasBarberia") || "[]") : 
-      misCitas;
+      misCitas.filter(cita => cita.telefono === usuarioActual.celular);
     
     const { citasPorFecha, fechasOrdenadas } = agruparCitasPorFecha(citasAMostrar);
 

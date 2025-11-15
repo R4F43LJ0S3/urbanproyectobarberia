@@ -30,13 +30,25 @@ const Citas = () => {
         nombre: `${user.nombre} ${user.apellido}`,
         telefono: user.celular
       }));
-    }
 
-    // Cargar citas
-    const stored = localStorage.getItem("citasBarberia");
-    if (stored) {
-      setCitas(JSON.parse(stored));
+      // Cargar citas SOLO si hay usuario logueado
+      const stored = localStorage.getItem("citasBarberia");
+      if (stored) {
+        const todasLasCitas = JSON.parse(stored);
+        
+        if (user.rol === 'admin') {
+          // Admin: ve todas las citas
+          setCitas(todasLasCitas);
+        } else {
+          // Usuario normal: solo sus citas
+          const citasUsuario = todasLasCitas.filter(
+            cita => cita.telefono === user.celular
+          );
+          setCitas(citasUsuario);
+        }
+      }
     }
+    // Si NO hay usuario, NO cargar citas (dejar el array vacío)
   }, []);
 
   const servicios = [
@@ -87,7 +99,22 @@ const Citas = () => {
     if (window.confirm("¿Deseas eliminar esta cita?")) {
       const resultado = Cita.eliminar(id);
       if (resultado.exito) {
+        // Actualizar estado local
         setCitas(prev => prev.filter(c => c.id !== id));
+        
+        // Si hay usuario logueado, recargar sus citas
+        if (usuarioActual) {
+          const todasLasCitas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
+          if (usuarioActual.rol === 'admin') {
+            setCitas(todasLasCitas);
+          } else {
+            const citasUsuario = todasLasCitas.filter(
+              cita => cita.telefono === usuarioActual.celular
+            );
+            setCitas(citasUsuario);
+          }
+        }
+        
         alert('✅ Cita eliminada correctamente');
       } else {
         alert(`❌ ${resultado.mensaje}`);
@@ -138,7 +165,7 @@ const Citas = () => {
         </div>
       )}
 
-      <div className="citas-layout">
+      <div className={usuarioActual ? "citas-layout" : "citas-layout-centered"}>
         {/* FORMULARIO */}
         <div className="card form">
           <label>
@@ -248,37 +275,52 @@ const Citas = () => {
           </div>
         </div>
 
-        {/* LISTADO DE CITAS */}
-        <div className="card citas-list">
-          <h3>📅 Citas registradas</h3>
-          {citas.length === 0 ? (
-            <p>No hay citas registradas.</p>
-          ) : (
-            <ul>
-              {citas.map((cita) => (
-                <li key={cita.id}>
-                  <strong>{cita.nombre}</strong> — {cita.servicio}
-                  <br />
-                  <small>
-                    {cita.fecha} | {cita.hora}
-                  </small>
-                  {cita.pagado && (
-                    <span className="badge-pagado">✓ Pagado</span>
-                  )}
-                  <div>
-                    <button
-                      className="btn outline"
-                      onClick={() => eliminarCita(cita.id)}
-                      style={{ marginTop: "6px" }}
-                    >
-                      Eliminar
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        {/* LISTADO DE CITAS - SOLO SI HAY USUARIO LOGUEADO */}
+        {usuarioActual && (
+          <div className="card citas-list">
+            <h3>
+              📅 {usuarioActual.rol === 'admin' 
+                ? 'Todas las citas registradas' 
+                : 'Mis citas registradas'}
+            </h3>
+            {citas.length === 0 ? (
+              <p>
+                {usuarioActual.rol === 'admin'
+                  ? 'No hay citas registradas en el sistema.'
+                  : 'No tienes citas registradas.'}
+              </p>
+            ) : (
+              <ul>
+                {citas.map((cita) => (
+                  <li key={cita.id}>
+                    <strong>{cita.nombre}</strong> — {cita.servicio}
+                    <br />
+                    <small>
+                      {cita.fecha} | {cita.hora}
+                    </small>
+                    {usuarioActual.rol === 'admin' && (
+                      <small style={{ display: 'block', marginTop: '4px', color: 'var(--muted)' }}>
+                        📞 {cita.telefono}
+                      </small>
+                    )}
+                    {cita.pagado && (
+                      <span className="badge-pagado">✓ Pagado</span>
+                    )}
+                    <div>
+                      <button
+                        className="btn outline"
+                        onClick={() => eliminarCita(cita.id)}
+                        style={{ marginTop: "6px" }}
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
     </main>
   );
