@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import "../styles/Home.css";
-import imagen from "../assets/imagen-ambiente.png";
-import imagen2 from "../assets/imagen-productos.png";
-import imagen3 from "../assets/imagen-atencion.png";
 
 const Home = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -67,7 +64,6 @@ const Home = () => {
             </div>
 
             <div className="features">
-              {/* 🔥 SIN SUBRAYADO: agregamos style={{ textDecoration: 'none' }} 🔥 */}
               <Link to="/barberos" className="feature" style={{ textDecoration: 'none' }}> 
                 <div>
                   <h4>Barberos expertos</h4>
@@ -123,7 +119,7 @@ const Home = () => {
             <h3>Ambiente profesional</h3>
             <div className="card-image">
               <img 
-                src="/imagen-ambiente.png" 
+                src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=400&h=250&fit=crop" 
                 alt="Ambiente Profesional"
               />
             </div>
@@ -136,7 +132,7 @@ const Home = () => {
             <h3>Productos premium</h3>
             <div className="card-image">
               <img 
-                src="/imagen-productos.png" 
+                src="https://images.unsplash.com/photo-1621605815971-fbc98d665033?w=400&h=250&fit=crop" 
                 alt="Productos premium"
               />
             </div>
@@ -149,7 +145,7 @@ const Home = () => {
             <h3>Atención al cliente</h3>
             <div className="card-image">
               <img 
-                src="/imagen-atencion.png" 
+                src="https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=400&h=250&fit=crop" 
                 alt="Atencion al Cliente"
               />
             </div>
