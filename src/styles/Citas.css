@@ -143,3 +143,87 @@
     padding: 0 16px;
   }
 }
+
+/* ============================================
+   BARBERO SELECCIONADO
+   ============================================ */
+.barbero-seleccionado-card {
+  background: linear-gradient(135deg, #fff9f0 0%, #ffffff 100%);
+  border: 2px solid #d4af37;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 24px 0;
+  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.2);
+  animation: slideIn 0.3s ease;
+}
+
+body.dark-mode .barbero-seleccionado-card {
+  background: linear-gradient(135deg, rgba(197, 154, 47, 0.15) 0%, #1a1a1a 100%);
+  border-color: #d4af37;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.barbero-seleccionado-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.barbero-seleccionado-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #d4af37;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+
+.barbero-seleccionado-info {
+  flex: 1;
+}
+
+.barbero-seleccionado-info h3 {
+  margin: 0 0 8px 0;
+  color: var(--accent);
+  font-size: 1.1rem;
+}
+
+.barbero-seleccionado-nombre {
+  margin: 0 0 4px 0;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: var(--text);
+}
+
+body.dark-mode .barbero-seleccionado-nombre {
+  color: #fff;
+}
+
+.barbero-seleccionado-especialidad {
+  margin: 0;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+body.dark-mode .barbero-seleccionado-especialidad {
+  color: #aaa;
+}
+
+/* RESPONSIVE */
+@media (max-width: 600px) {
+  .barbero-seleccionado-content {
+    flex-direction: column;
+    text-align: center;
+  }
+}

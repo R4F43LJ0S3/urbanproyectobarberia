@@ -1,12 +1,43 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/Citas.css";
 import Cita from "../models/Citas";
 import Usuario from "../models/Usuarios";
+import Barberos from "./Barberos";  
+
+// Datos de barberos (importados desde el componente Barberos)
+const datosBarberos = [
+  { 
+    id: 1, 
+    nombre: "Ricardo 'El Clásico'", 
+    especialidad: "Cortes Tradicionales",
+    imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTGgCV2KT2zpjkPN9_5ONLMvOLLYHG8GEEgDw&s",
+    experiencia: "10 años",
+    rating: 4.9
+  },
+  { 
+    id: 2, 
+    nombre: "Rafael 'El Diseñador'", 
+    especialidad: "Diseños y Fade Modernos",
+    imagen: "https://i.ytimg.com/vi/cr1aUuAbhPo/maxresdefault.jpg",
+    experiencia: "8 años",
+    rating: 4.8
+  },
+  { 
+    id: 3, 
+    nombre: "Juan 'El Lápiz'", 
+    especialidad: "Afeitado con Navaja y Patillas",
+    imagen: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCv5o6aAYemBL-7g4hC1V3v1JFICXqZRnPow&s",
+    experiencia: "12 años",
+    rating: 5.0
+  }
+];
 
 const Citas = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [usuarioActual, setUsuarioActual] = useState(null);
+  const [barberoSeleccionado, setBarberoSeleccionado] = useState(null);
   
   const [form, setForm] = useState({
     nombre: "",
@@ -15,6 +46,7 @@ const Citas = () => {
     fecha: "",
     hora: "",
     notas: "",
+    barbero: "",
   });
   const [citas, setCitas] = useState([]);
 
@@ -22,6 +54,11 @@ const Citas = () => {
   useEffect(() => {
     // Verificar si hay sesión activa
     const user = Usuario.obtenerSesion();
+
+     if (location.state?.barberoSeleccionado) {
+      setBarberoSeleccionado(location.state.barberoSeleccionado);
+    }
+
     if (user) {
       setUsuarioActual(user);
       // Pre-llenar el formulario con datos del usuario
@@ -86,10 +123,16 @@ const Citas = () => {
       return;
     }
 
+     // Agregar barbero a la cita antes de redirigir
+    const citaConBarbero = {
+      ...resultado.cita.toJSON(),
+      barbero: barberoSeleccionado?.nombre || "No especificado"
+    };
+
     // Redirigir al pago
     navigate("/pago", { 
       state: { 
-        cita: resultado.cita.toJSON()
+        cita: citaConBarbero
       } 
     });
   };
@@ -130,7 +173,30 @@ const Citas = () => {
           ? `¡Hola ${usuarioActual.nombre}! Agenda tu cita en Urban Barber.`
           : 'Completa tus datos para reservar tu servicio en Urban Barber.'}
       </p>
-
+        {/* BARBERO SELECCIONADO */}
+      {barberoSeleccionado && (
+        <div className="barbero-seleccionado-card">
+          <div className="barbero-seleccionado-content">
+            <img 
+              src={barberoSeleccionado.imagen} 
+              alt={barberoSeleccionado.nombre}
+              className="barbero-seleccionado-img"
+            />
+            <div className="barbero-seleccionado-info">
+              <h3>✂️ Barbero seleccionado</h3>
+              <p className="barbero-seleccionado-nombre">{barberoSeleccionado.nombre}</p>
+              <p className="barbero-seleccionado-especialidad">{barberoSeleccionado.especialidad}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setBarberoSeleccionado(null)}
+            className="btn outline"
+            style={{ marginTop: '12px' }}
+          >
+            Cambiar barbero
+          </button>
+        </div>
+      )}
       {/* ALERTA DE USUARIO */}
       {!usuarioActual && (
         <div style={{
@@ -216,6 +282,40 @@ const Citas = () => {
                 </option>
               ))}
             </select>
+          </label>
+
+          <label>
+            Barbero
+            <select
+              value={form.barbero}
+              onChange={(e) => {
+                const barberoId = parseInt(e.target.value);
+                const barbero = datosBarberos.find(b => b.id === barberoId);
+                setBarberoSeleccionado(barbero || null);
+                setForm({ ...form, barbero: e.target.value });
+              }}
+              disabled={!!barberoSeleccionado}
+              style={{
+                background: barberoSeleccionado ? '#f5f5f5' : 'var(--input-bg)',
+                cursor: barberoSeleccionado ? 'not-allowed' : 'pointer'
+              }}
+            >
+              <option value="">
+                {barberoSeleccionado 
+                  ? barberoSeleccionado.nombre 
+                  : "-- Selecciona un barbero (opcional) --"}
+              </option>
+              {!barberoSeleccionado && datosBarberos.map((barbero) => (
+                <option key={barbero.id} value={barbero.id}>
+                  {barbero.nombre} - {barbero.especialidad}
+                </option>
+              ))}
+            </select>
+            {barberoSeleccionado && (
+              <small style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
+                Ya tienes un barbero seleccionado
+              </small>
+            )}
           </label>
 
           <label>

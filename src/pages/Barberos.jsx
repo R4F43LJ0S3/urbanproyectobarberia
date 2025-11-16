@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../styles/Barberos.css';
 import { Scissors, Award, Star } from 'lucide-react';
 
@@ -31,6 +31,17 @@ const datosBarberos = [
 ];
 
 const Barberos = () => {
+  const navigate = useNavigate();
+
+  const handleAgendarCita = (barbero) => {
+    // Navegar a la página de citas pasando el barbero seleccionado
+    navigate('/citas', { 
+      state: { 
+        barberoSeleccionado: barbero 
+      } 
+    });
+  };
+
   return (
     <div className="barberos-page">
       <div className="barberos-container">
@@ -93,6 +104,14 @@ const Barberos = () => {
                   </div>
                 </div>
               </div>
+
+              {/* BOTÓN AGENDAR */}
+              <button 
+                className="barbero-agendar-btn"
+                onClick={() => handleAgendarCita(barbero)}
+              >
+                Agendar con {barbero.nombre.split("'")[0].trim()}
+              </button>
 
             </div>
           ))}

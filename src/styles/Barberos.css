@@ -1,7 +1,5 @@
-/* ============================================
-   BARBEROS - ESTILOS CON DETECCIÓN AUTOMÁTICA
-   DE body.dark-mode
-   ============================================ */
+/* BARBEROS - ESTILOS CON DETECCIÓN AUTOMÁTICA
+   DE body.dark-mode*/
 
 .barberos-page {
   padding: 60px 20px;
@@ -285,4 +283,30 @@ body.dark-mode .barbero-info-label {
   .barberos-header-icons {
     gap: 10px;
   }
+}
+
+/* BOTÓN AGENDAR CITA */
+.barbero-agendar-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #d4af37 0%, #f4d774 100%);
+  color: #1a1a1a;
+  border: none;
+  padding: 12px 24px;
+  font-size: 1em;
+  font-weight: bold;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+  margin-top: 20px;
+}
+
+.barbero-agendar-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+  background: linear-gradient(135deg, #f4d774 0%, #d4af37 100%);
+}
+
+.barbero-agendar-btn:active {
+  transform: translateY(-1px);
 }
