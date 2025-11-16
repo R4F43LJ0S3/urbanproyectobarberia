@@ -429,9 +429,3 @@ UrbanBarber
 📍 Valledupar, Cesar, Colombia
 📞 300 456 7890
 📧 contacto@urbanbarber.com
-
-🙏 Agradecimientos
-
-React Team por la excelente documentación
-Unsplash por las imágenes de muestra
-Lucide por los iconos modernos
