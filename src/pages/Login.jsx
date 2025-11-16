@@ -533,6 +533,10 @@ const Login = () => {
                               <p className="cita-detalle">
                                 <strong>🕐 Hora:</strong> {formatearHora(cita.hora)}
                               </p>
+                              {/* 👇 NUEVO: MOSTRAR BARBERO */}
+                              <p className="cita-detalle">
+                                <strong>💈 Barbero:</strong> {cita.barbero || "No especificado"}
+                              </p>
                               {esAdmin && (
                                 <p className="cita-detalle">
                                   <strong>📞 Teléfono:</strong> {cita.telefono}

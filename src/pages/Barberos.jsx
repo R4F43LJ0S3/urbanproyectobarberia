@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import '../styles/Barberos.css';
 import { Scissors, Award, Star } from 'lucide-react';
 
@@ -117,14 +117,8 @@ const Barberos = () => {
           ))}
         </div>
 
-        {/* CALL TO ACTION */}
-        <div className="barberos-cta">
-          <Link to="/citas">
-            <button className="barberos-cta-button">
-              Agenda tu Cita Ahora
-            </button>
-          </Link>
-        </div>
+        {/* ❌ BOTÓN "Agenda tu Cita Ahora" ELIMINADO */}
+        {/* Ya no aparece el call-to-action final */}
 
       </div>
     </div>

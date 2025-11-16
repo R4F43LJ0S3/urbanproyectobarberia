@@ -3,7 +3,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/Citas.css";
 import Cita from "../models/Citas";
 import Usuario from "../models/Usuarios";
-import Barberos from "./Barberos";  
 
 // Datos de barberos (importados desde el componente Barberos)
 const datosBarberos = [
@@ -55,7 +54,7 @@ const Citas = () => {
     // Verificar si hay sesión activa
     const user = Usuario.obtenerSesion();
 
-     if (location.state?.barberoSeleccionado) {
+    if (location.state?.barberoSeleccionado) {
       setBarberoSeleccionado(location.state.barberoSeleccionado);
     }
 
@@ -86,7 +85,7 @@ const Citas = () => {
       }
     }
     // Si NO hay usuario, NO cargar citas (dejar el array vacío)
-  }, []);
+  }, [location.state]);
 
   const servicios = [
     "Corte Sencillo",
@@ -123,7 +122,7 @@ const Citas = () => {
       return;
     }
 
-     // Agregar barbero a la cita antes de redirigir
+    // 👇 CAMBIO IMPORTANTE: Agregar barbero a la cita antes de redirigir
     const citaConBarbero = {
       ...resultado.cita.toJSON(),
       barbero: barberoSeleccionado?.nombre || "No especificado"
@@ -173,7 +172,8 @@ const Citas = () => {
           ? `¡Hola ${usuarioActual.nombre}! Agenda tu cita en Urban Barber.`
           : 'Completa tus datos para reservar tu servicio en Urban Barber.'}
       </p>
-        {/* BARBERO SELECCIONADO */}
+
+      {/* BARBERO SELECCIONADO */}
       {barberoSeleccionado && (
         <div className="barbero-seleccionado-card">
           <div className="barbero-seleccionado-content">
@@ -197,6 +197,7 @@ const Citas = () => {
           </button>
         </div>
       )}
+
       {/* ALERTA DE USUARIO */}
       {!usuarioActual && (
         <div style={{
@@ -359,7 +360,7 @@ const Citas = () => {
             <button
               type="button"
               className="btn outline"
-              onClick={() =>
+              onClick={() => {
                 setForm({
                   nombre: usuarioActual ? `${usuarioActual.nombre} ${usuarioActual.apellido}` : "",
                   telefono: usuarioActual ? usuarioActual.celular : "",
@@ -367,8 +368,10 @@ const Citas = () => {
                   fecha: "",
                   hora: "",
                   notas: "",
-                })
-              }
+                  barbero: "",
+                });
+                setBarberoSeleccionado(null);
+              }}
             >
               Limpiar
             </button>
@@ -398,6 +401,12 @@ const Citas = () => {
                     <small>
                       {cita.fecha} | {cita.hora}
                     </small>
+                    {/* 👇 NUEVO: MOSTRAR BARBERO EN LISTADO */}
+                    {cita.barbero && (
+                      <small style={{ display: 'block', marginTop: '4px', color: '#d4af37' }}>
+                        💈 {cita.barbero}
+                      </small>
+                    )}
                     {usuarioActual.rol === 'admin' && (
                       <small style={{ display: 'block', marginTop: '4px', color: 'var(--muted)' }}>
                         📞 {cita.telefono}
