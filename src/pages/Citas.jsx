@@ -3,9 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/Citas.css";
 import Cita from "../models/Citas";
 import Usuario from "../models/Usuarios";
-import { citasService, authService, barberosService, serviciosService } from '../services/api';
 
-// Datos de barberos (importados desde el componente Barberos)
+// Datos de barberos
 const datosBarberos = [
   { 
     id: 1, 
@@ -49,41 +48,37 @@ const Citas = () => {
     barbero: "",
   });
   const [citas, setCitas] = useState([]);
-  const [barberosAPI, setBarberosAPI] = useState([]);
-  const [serviciosAPI, setServiciosAPI] = useState([]);
 
   // Cargar usuario y citas al iniciar
-useEffect(() => {
-  // Cargar barberos desde la API
-  barberosService.getAll()
-    .then(data => setBarberosAPI(data))
-    .catch(err => console.error('Error al cargar barberos:', err));
+  useEffect(() => {
+    // Verificar usuario autenticado
+    const user = Usuario.obtenerSesion();
+    
+    // Verificar si hay barbero seleccionado
+    if (location.state?.barberoSeleccionado) {
+      setBarberoSeleccionado(location.state.barberoSeleccionado);
+    }
 
-  // Cargar servicios desde la API
-  serviciosService.getAll()
-    .then(data => setServiciosAPI(data))
-    .catch(err => console.error('Error al cargar servicios:', err));
+    if (user) {
+      setUsuarioActual(user);
+      setForm(prev => ({
+        ...prev,
+        nombre: `${user.nombre} ${user.apellido}`,
+        telefono: user.celular
+      }));
 
-  // Verificar usuario autenticado
-  const user = authService.getCurrentUser();
-  if (location.state?.barberoSeleccionado) {
-    setBarberoSeleccionado(location.state.barberoSeleccionado);
-  }
-
-  if (user && authService.isAuthenticated()) {
-    setUsuarioActual(user);
-    setForm(prev => ({
-      ...prev,
-      nombre: `${user.nombre} ${user.apellido}`,
-      telefono: user.celular
-    }));
-
-    // Cargar citas del usuario desde la API
-    citasService.getMyCitas()
-      .then(data => setCitas(data))
-      .catch(err => console.error('Error al cargar citas:', err));
-  }
-}, [location.state]);
+      // Cargar citas del usuario desde localStorage
+      const todasLasCitas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
+      
+      // Si es admin, mostrar todas las citas; si no, solo las suyas
+      if (user.rol === 'admin') {
+        setCitas(todasLasCitas);
+      } else {
+        const citasUsuario = todasLasCitas.filter(c => c.telefono === user.celular);
+        setCitas(citasUsuario);
+      }
+    }
+  }, [location.state]);
 
   const servicios = [
     "Corte Sencillo",
@@ -95,73 +90,70 @@ useEffect(() => {
   ];
 
   // Crear cita
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = (e) => {
+    e.preventDefault();
 
-  if (!usuarioActual) {
-    const continuar = window.confirm(
-      '⚠️ No has iniciado sesión.\n\n' +
-      '¿Deseas continuar sin cuenta? (No podrás ver tu historial de citas)\n\n' +
-      'Presiona "Aceptar" para continuar o "Cancelar" para iniciar sesión.'
-    );
-    
-    if (!continuar) {
-      navigate('/login');
+    if (!usuarioActual) {
+      const continuar = window.confirm(
+        '⚠️ No has iniciado sesión.\n\n' +
+        '¿Deseas continuar sin cuenta? (No podrás ver tu historial de citas)\n\n' +
+        'Presiona "Aceptar" para continuar o "Cancelar" para iniciar sesión.'
+      );
+      
+      if (!continuar) {
+        navigate('/login');
+        return;
+      }
+    }
+
+    // Validaciones
+    if (!form.nombre || !form.telefono || !form.servicio || !form.fecha || !form.hora) {
+      alert('❌ Por favor completa todos los campos obligatorios');
       return;
     }
-  }
 
-  // Validaciones
-  if (!form.nombre || !form.telefono || !form.servicio || !form.fecha || !form.hora) {
-    alert('❌ Por favor completa todos los campos obligatorios');
-    return;
-  }
-
-  try {
-    // Preparar datos para la API
-    const citaData = {
-      usuarioId: usuarioActual?.id || null,
+    // Crear cita usando el modelo
+    const resultado = Cita.crearDesdeFomulario({
       nombre: form.nombre,
-      correo: usuarioActual?.correo || '',
-      celular: form.telefono,
-      barberoId: barberoSeleccionado?.id || parseInt(form.barbero) || 1,
-      servicioId: parseInt(form.servicio),
-      fecha: form.fecha + 'T00:00:00',
-      hora: form.hora + ':00',
-      notas: form.notas || ''
-    };
+      telefono: form.telefono,
+      servicio: form.servicio,
+      fecha: form.fecha,
+      hora: form.hora,
+      notas: form.notas
+    });
 
-    const resultado = await citasService.create(citaData);
+    if (!resultado.valido) {
+      alert(`❌ ${resultado.mensaje}`);
+      return;
+    }
 
-    alert('✅ Cita creada exitosamente');
+    // Agregar barbero a la cita
+    resultado.cita.barbero = barberoSeleccionado?.nombre || "No especificado";
 
-    // Navegar al pago
+    // Navegar al pago con los datos de la cita
     navigate("/pago", { 
       state: { 
         cita: {
           ...form,
-          id: resultado.citaId,
-          barbero: barberoSeleccionado?.nombre || "No especificado"
+          id: resultado.cita.id,
+          barbero: resultado.cita.barbero
         }
       } 
     });
-  } catch (error) {
-    alert(`❌ Error al crear la cita: ${error.message}`);
-  }
-};
+  };
 
   // Eliminar cita
-  const eliminarCita = async (id) => {
-  if (window.confirm("¿Deseas eliminar esta cita?")) {
-    try {
-      await citasService.delete(id);
-      setCitas(prev => prev.filter(c => c.id !== id));
-      alert('✅ Cita eliminada correctamente');
-    } catch (error) {
-      alert(`❌ Error al eliminar: ${error.message}`);
+  const eliminarCita = (id) => {
+    if (window.confirm("¿Deseas eliminar esta cita?")) {
+      const resultado = Cita.eliminar(id);
+      if (resultado.exito) {
+        setCitas(prev => prev.filter(c => c.id !== id));
+        alert('✅ Cita eliminada correctamente');
+      } else {
+        alert('❌ Error al eliminar la cita');
+      }
     }
-  }
-};
+  };
 
   return (
     <main className="page citas-page container">
@@ -400,7 +392,6 @@ const handleSubmit = async (e) => {
                     <small>
                       {cita.fecha} | {cita.hora}
                     </small>
-                    {/* 👇 NUEVO: MOSTRAR BARBERO EN LISTADO */}
                     {cita.barbero && (
                       <small style={{ display: 'block', marginTop: '4px', color: '#d4af37' }}>
                         💈 {cita.barbero}

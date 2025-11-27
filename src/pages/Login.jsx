@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Login.css";
 import Usuario from "../models/Usuarios";
-import { authService, citasService } from '../services/api';
 
 const Login = () => {
  
@@ -31,17 +30,15 @@ const Login = () => {
   // EFECTOS
   
   // Cargar sesión al iniciar
-useEffect(() => {
-  // Verificar si hay sesión guardada
-  const user = authService.getCurrentUser();
-  if (user && authService.isAuthenticated()) {
-    setUsuarioActual(user);
-    setVista('profile');
-    // Cargar citas desde la API
-    cargarCitasDesdeAPI();
-  }
-  cargarTodosLosUsuarios();
-}, []);
+  useEffect(() => {
+    const user = Usuario.obtenerSesion();
+    if (user) {
+      setUsuarioActual(user);
+      setVista('profile');
+      cargarCitasDelUsuario(user.celular);
+    }
+    cargarTodosLosUsuarios();
+  }, []);
 
   // FUNCIONES
   const cargarTodosLosUsuarios = () => {
@@ -49,88 +46,58 @@ useEffect(() => {
   };
 
   const cargarCitasDelUsuario = (celular) => {
-  const citas = Usuario.obtenerCitasDeUsuario(celular);
-  setMisCitas(citas);
-};
-
-  const cargarCitasDesdeAPI = async () => {
-  // Solo intentar cargar si hay token de autenticación
-  if (!authService.isAuthenticated()) {
-    return;
-  }
-
-  try {
-    const citas = await citasService.getMyCitas();
+    const citas = Usuario.obtenerCitasDeUsuario(celular);
     setMisCitas(citas);
-  } catch (error) {
-    console.error('Error al cargar citas desde API:', error);
-    // Si falla la API, intentar cargar desde localStorage como fallback
-    const user = authService.getCurrentUser();
-    if (user?.celular) {
-      const citasLocal = Usuario.obtenerCitasDeUsuario(user.celular);
-      setMisCitas(citasLocal);
-    }
-  }
-};
+  };
 
   // Manejar login
-const handleLogin = async (e) => {
-  e.preventDefault();
-  
-  if (!loginForm.username || !loginForm.password) {
-    alert('❌ Por favor completa todos los campos');
-    return;
-  }
+  const handleLogin = (e) => {
+    e.preventDefault();
+    
+    if (!loginForm.username || !loginForm.password) {
+      alert('❌ Por favor completa todos los campos');
+      return;
+    }
 
-  try {
-    const resultado = await authService.login(
-      loginForm.username, 
-      loginForm.password
-    );
+    const resultado = Usuario.login(loginForm.username, loginForm.password);
     
-    // Actualizar estado local
-    setUsuarioActual(resultado.usuario);
-    setVista('profile');
-    setLoginForm({ username: '', password: '' });
-    
-    // Cargar usuarios
-    cargarTodosLosUsuarios();
-    
-    // Cargar citas desde la API
-    await cargarCitasDesdeAPI();
-    
-    alert(`✅ ${resultado.message}`);
-  } catch (error) {
-    alert(`❌ ${error.message}`);
-  }
-};
+    if (resultado.success) {
+      setUsuarioActual(resultado.usuario);
+      setVista('profile');
+      cargarCitasDelUsuario(resultado.usuario.celular);
+      setLoginForm({ username: '', password: '' });
+      cargarTodosLosUsuarios();
+      alert(`✅ ${resultado.mensaje}`);
+    } else {
+      alert(`❌ ${resultado.mensaje}`);
+    }
+  };
 
   // Manejar registro
-const handleRegister = async (e) => {
-  e.preventDefault();
+  const handleRegister = (e) => {
+    e.preventDefault();
 
-  if (Object.values(registerForm).some(val => !val)) {
-    alert('❌ Por favor completa todos los campos');
-    return;
-  }
+    if (Object.values(registerForm).some(val => !val)) {
+      alert('❌ Por favor completa todos los campos');
+      return;
+    }
 
-  if (registerForm.password !== registerForm.confirmPassword) {
-    alert('❌ Las contraseñas no coinciden');
-    return;
-  }
+    if (registerForm.password !== registerForm.confirmPassword) {
+      alert('❌ Las contraseñas no coinciden');
+      return;
+    }
 
-  if (registerForm.password.length < 6) {
-    alert('❌ La contraseña debe tener al menos 6 caracteres');
-    return;
-  }
+    if (registerForm.password.length < 6) {
+      alert('❌ La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
 
-  if (registerForm.celular.length !== 10 || !registerForm.celular.startsWith('3')) {
-    alert('❌ El celular debe tener 10 dígitos y comenzar con 3');
-    return;
-  }
+    if (registerForm.celular.length !== 10 || !registerForm.celular.startsWith('3')) {
+      alert('❌ El celular debe tener 10 dígitos y comenzar con 3');
+      return;
+    }
 
-  try {
-    await authService.register({
+    const resultado = Usuario.registrar({
       username: registerForm.username,
       nombre: registerForm.nombre,
       apellido: registerForm.apellido,
@@ -138,31 +105,32 @@ const handleRegister = async (e) => {
       celular: registerForm.celular,
       password: registerForm.password
     });
-    
-    alert('✅ Usuario registrado exitosamente');
-    setVista('login');
-    setRegisterForm({
-      username: '',
-      correo: '',
-      password: '',
-      confirmPassword: '',
-      nombre: '',
-      apellido: '',
-      celular: ''
-    });
-    cargarTodosLosUsuarios();
-  } catch (error) {
-    alert(`❌ ${error.message}`);
-  }
-};
+
+    if (resultado.success) {
+      alert('✅ Usuario registrado exitosamente');
+      setVista('login');
+      setRegisterForm({
+        username: '',
+        correo: '',
+        password: '',
+        confirmPassword: '',
+        nombre: '',
+        apellido: '',
+        celular: ''
+      });
+      cargarTodosLosUsuarios();
+    } else {
+      alert(`❌ ${resultado.mensaje}`);
+    }
+  };
 
   // Cerrar sesión
   const handleLogout = () => {
-  authService.logout();
-  setUsuarioActual(null);
-  setMisCitas([]);
-  setVista('login');
-};
+    Usuario.logout();
+    setUsuarioActual(null);
+    setMisCitas([]);
+    setVista('login');
+  };
 
   // Exportar usuarios
   const handleExportUsers = () => {
@@ -417,8 +385,6 @@ const handleRegister = async (e) => {
   // VISTA DE PERFIL
   if (vista === 'profile' && usuarioActual) {
     const esAdmin = usuarioActual.rol === 'admin';
-    // ADMIN: Ve todas las citas
-    // USUARIO NORMAL: Solo ve sus propias citas
     const citasAMostrar = esAdmin ? 
       JSON.parse(localStorage.getItem("citasBarberia") || "[]") : 
       misCitas.filter(cita => cita.telefono === usuarioActual.celular);
@@ -427,7 +393,6 @@ const handleRegister = async (e) => {
 
     return (
       <main className="page login-page container">
-        {/* PERFIL */}
         <div className="card admin-panel">
           <div className="admin-header">
             <h2>
@@ -449,7 +414,6 @@ const handleRegister = async (e) => {
             </div>
           </div>
 
-          {/* DATOS DEL USUARIO */}
           <div className="perfil-info">
             <div className="perfil-item">
               <span className="perfil-label">Usuario</span>
@@ -483,7 +447,6 @@ const handleRegister = async (e) => {
             </div>
           </div>
 
-          {/* LISTA DE USUARIOS (Solo admin) */}
           {esAdmin && (
             <div className="usuarios-section">
               <h3 className="citas-title">
@@ -524,7 +487,6 @@ const handleRegister = async (e) => {
             </div>
           )}
 
-          {/* CITAS */}
           <h3 className="citas-title">
             {esAdmin ? '📅 Todas las Citas Registradas' : '📅 Mis Citas'}
             {' '}({citasAMostrar.length})
@@ -566,7 +528,6 @@ const handleRegister = async (e) => {
                               <p className="cita-detalle">
                                 <strong>🕐 Hora:</strong> {formatearHora(cita.hora)}
                               </p>
-                              {/* 👇 NUEVO: MOSTRAR BARBERO */}
                               <p className="cita-detalle">
                                 <strong>💈 Barbero:</strong> {cita.barbero || "No especificado"}
                               </p>
