@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/Citas.css";
 import Cita from "../models/Citas";
 import Usuario from "../models/Usuarios";
+import { citasService, authService, barberosService, serviciosService } from '../services/api';
 
 // Datos de barberos (importados desde el componente Barberos)
 const datosBarberos = [
@@ -48,44 +49,41 @@ const Citas = () => {
     barbero: "",
   });
   const [citas, setCitas] = useState([]);
+  const [barberosAPI, setBarberosAPI] = useState([]);
+  const [serviciosAPI, setServiciosAPI] = useState([]);
 
   // Cargar usuario y citas al iniciar
-  useEffect(() => {
-    // Verificar si hay sesión activa
-    const user = Usuario.obtenerSesion();
+useEffect(() => {
+  // Cargar barberos desde la API
+  barberosService.getAll()
+    .then(data => setBarberosAPI(data))
+    .catch(err => console.error('Error al cargar barberos:', err));
 
-    if (location.state?.barberoSeleccionado) {
-      setBarberoSeleccionado(location.state.barberoSeleccionado);
-    }
+  // Cargar servicios desde la API
+  serviciosService.getAll()
+    .then(data => setServiciosAPI(data))
+    .catch(err => console.error('Error al cargar servicios:', err));
 
-    if (user) {
-      setUsuarioActual(user);
-      // Pre-llenar el formulario con datos del usuario
-      setForm(prev => ({
-        ...prev,
-        nombre: `${user.nombre} ${user.apellido}`,
-        telefono: user.celular
-      }));
+  // Verificar usuario autenticado
+  const user = authService.getCurrentUser();
+  if (location.state?.barberoSeleccionado) {
+    setBarberoSeleccionado(location.state.barberoSeleccionado);
+  }
 
-      // Cargar citas SOLO si hay usuario logueado
-      const stored = localStorage.getItem("citasBarberia");
-      if (stored) {
-        const todasLasCitas = JSON.parse(stored);
-        
-        if (user.rol === 'admin') {
-          // Admin: ve todas las citas
-          setCitas(todasLasCitas);
-        } else {
-          // Usuario normal: solo sus citas
-          const citasUsuario = todasLasCitas.filter(
-            cita => cita.telefono === user.celular
-          );
-          setCitas(citasUsuario);
-        }
-      }
-    }
-    // Si NO hay usuario, NO cargar citas (dejar el array vacío)
-  }, [location.state]);
+  if (user && authService.isAuthenticated()) {
+    setUsuarioActual(user);
+    setForm(prev => ({
+      ...prev,
+      nombre: `${user.nombre} ${user.apellido}`,
+      telefono: user.celular
+    }));
+
+    // Cargar citas del usuario desde la API
+    citasService.getMyCitas()
+      .then(data => setCitas(data))
+      .catch(err => console.error('Error al cargar citas:', err));
+  }
+}, [location.state]);
 
   const servicios = [
     "Corte Sencillo",
@@ -97,72 +95,73 @@ const Citas = () => {
   ];
 
   // Crear cita
-  const handleSubmit = (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // Si no hay usuario logueado, mostrar mensaje
-    if (!usuarioActual) {
-      const continuar = window.confirm(
-        '⚠️ No has iniciado sesión.\n\n' +
-        '¿Deseas continuar sin cuenta? (No podrás ver tu historial de citas)\n\n' +
-        'Presiona "Aceptar" para continuar o "Cancelar" para iniciar sesión.'
-      );
-      
-      if (!continuar) {
-        navigate('/login');
-        return;
-      }
-    }
-
-    // Crear y validar cita
-    const resultado = Cita.crearDesdeFomulario(form);
-
-    if (!resultado.valido) {
-      alert(`❌ ${resultado.mensaje}`);
+  if (!usuarioActual) {
+    const continuar = window.confirm(
+      '⚠️ No has iniciado sesión.\n\n' +
+      '¿Deseas continuar sin cuenta? (No podrás ver tu historial de citas)\n\n' +
+      'Presiona "Aceptar" para continuar o "Cancelar" para iniciar sesión.'
+    );
+    
+    if (!continuar) {
+      navigate('/login');
       return;
     }
+  }
 
-    // 👇 CAMBIO IMPORTANTE: Agregar barbero a la cita antes de redirigir
-    const citaConBarbero = {
-      ...resultado.cita.toJSON(),
-      barbero: barberoSeleccionado?.nombre || "No especificado"
+  // Validaciones
+  if (!form.nombre || !form.telefono || !form.servicio || !form.fecha || !form.hora) {
+    alert('❌ Por favor completa todos los campos obligatorios');
+    return;
+  }
+
+  try {
+    // Preparar datos para la API
+    const citaData = {
+      usuarioId: usuarioActual?.id || null,
+      nombre: form.nombre,
+      correo: usuarioActual?.correo || '',
+      celular: form.telefono,
+      barberoId: barberoSeleccionado?.id || parseInt(form.barbero) || 1,
+      servicioId: parseInt(form.servicio),
+      fecha: form.fecha + 'T00:00:00',
+      hora: form.hora + ':00',
+      notas: form.notas || ''
     };
 
-    // Redirigir al pago
+    const resultado = await citasService.create(citaData);
+
+    alert('✅ Cita creada exitosamente');
+
+    // Navegar al pago
     navigate("/pago", { 
       state: { 
-        cita: citaConBarbero
+        cita: {
+          ...form,
+          id: resultado.citaId,
+          barbero: barberoSeleccionado?.nombre || "No especificado"
+        }
       } 
     });
-  };
+  } catch (error) {
+    alert(`❌ Error al crear la cita: ${error.message}`);
+  }
+};
 
   // Eliminar cita
-  const eliminarCita = (id) => {
-    if (window.confirm("¿Deseas eliminar esta cita?")) {
-      const resultado = Cita.eliminar(id);
-      if (resultado.exito) {
-        // Actualizar estado local
-        setCitas(prev => prev.filter(c => c.id !== id));
-        
-        // Si hay usuario logueado, recargar sus citas
-        if (usuarioActual) {
-          const todasLasCitas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
-          if (usuarioActual.rol === 'admin') {
-            setCitas(todasLasCitas);
-          } else {
-            const citasUsuario = todasLasCitas.filter(
-              cita => cita.telefono === usuarioActual.celular
-            );
-            setCitas(citasUsuario);
-          }
-        }
-        
-        alert('✅ Cita eliminada correctamente');
-      } else {
-        alert(`❌ ${resultado.mensaje}`);
-      }
+  const eliminarCita = async (id) => {
+  if (window.confirm("¿Deseas eliminar esta cita?")) {
+    try {
+      await citasService.delete(id);
+      setCitas(prev => prev.filter(c => c.id !== id));
+      alert('✅ Cita eliminada correctamente');
+    } catch (error) {
+      alert(`❌ Error al eliminar: ${error.message}`);
     }
-  };
+  }
+};
 
   return (
     <main className="page citas-page container">

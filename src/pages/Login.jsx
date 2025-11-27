@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Login.css";
 import Usuario from "../models/Usuarios";
+import { authService, citasService } from '../services/api';
 
 const Login = () => {
-  // ==========================================
+ 
   // ESTADOS
-  // ==========================================
   const [vista, setVista] = useState('login'); // 'login', 'register', 'profile'
   const [usuarioActual, setUsuarioActual] = useState(null);
   const [todosLosUsuarios, setTodosLosUsuarios] = useState([]);
@@ -28,108 +28,141 @@ const Login = () => {
     celular: ''
   });
 
-  // ==========================================
   // EFECTOS
-  // ==========================================
   
   // Cargar sesión al iniciar
-  useEffect(() => {
-    const user = Usuario.obtenerSesion();
-    if (user) {
-      setUsuarioActual(user);
-      setVista('profile');
-      cargarCitasDelUsuario(user.celular);
-    }
-    cargarTodosLosUsuarios();
-  }, []);
+useEffect(() => {
+  // Verificar si hay sesión guardada
+  const user = authService.getCurrentUser();
+  if (user && authService.isAuthenticated()) {
+    setUsuarioActual(user);
+    setVista('profile');
+    // Cargar citas desde la API
+    cargarCitasDesdeAPI();
+  }
+  cargarTodosLosUsuarios();
+}, []);
 
-  // ==========================================
   // FUNCIONES
-  // ==========================================
-
   const cargarTodosLosUsuarios = () => {
     setTodosLosUsuarios(Usuario.obtenerTodos());
   };
 
   const cargarCitasDelUsuario = (celular) => {
-    const citas = Usuario.obtenerCitasDeUsuario(celular);
+  const citas = Usuario.obtenerCitasDeUsuario(celular);
+  setMisCitas(citas);
+};
+
+  const cargarCitasDesdeAPI = async () => {
+  // Solo intentar cargar si hay token de autenticación
+  if (!authService.isAuthenticated()) {
+    return;
+  }
+
+  try {
+    const citas = await citasService.getMyCitas();
     setMisCitas(citas);
-  };
+  } catch (error) {
+    console.error('Error al cargar citas desde API:', error);
+    // Si falla la API, intentar cargar desde localStorage como fallback
+    const user = authService.getCurrentUser();
+    if (user?.celular) {
+      const citasLocal = Usuario.obtenerCitasDeUsuario(user.celular);
+      setMisCitas(citasLocal);
+    }
+  }
+};
 
   // Manejar login
-  const handleLogin = (e) => {
-    e.preventDefault();
-    
-    if (!loginForm.username || !loginForm.password) {
-      alert('❌ Por favor completa todos los campos');
-      return;
-    }
+const handleLogin = async (e) => {
+  e.preventDefault();
+  
+  if (!loginForm.username || !loginForm.password) {
+    alert('❌ Por favor completa todos los campos');
+    return;
+  }
 
-    const resultado = Usuario.login(loginForm.username, loginForm.password);
+  try {
+    const resultado = await authService.login(
+      loginForm.username, 
+      loginForm.password
+    );
     
-    if (resultado.success) {
-      setUsuarioActual(resultado.usuario);
-      setVista('profile');
-      setLoginForm({ username: '', password: '' });
-      cargarCitasDelUsuario(resultado.usuario.celular);
-      cargarTodosLosUsuarios();
-    } else {
-      alert(`❌ ${resultado.mensaje}`);
-    }
-  };
+    // Actualizar estado local
+    setUsuarioActual(resultado.usuario);
+    setVista('profile');
+    setLoginForm({ username: '', password: '' });
+    
+    // Cargar usuarios
+    cargarTodosLosUsuarios();
+    
+    // Cargar citas desde la API
+    await cargarCitasDesdeAPI();
+    
+    alert(`✅ ${resultado.message}`);
+  } catch (error) {
+    alert(`❌ ${error.message}`);
+  }
+};
 
   // Manejar registro
-  const handleRegister = (e) => {
-    e.preventDefault();
+const handleRegister = async (e) => {
+  e.preventDefault();
 
-    // Validaciones
-    if (Object.values(registerForm).some(val => !val)) {
-      alert('❌ Por favor completa todos los campos');
-      return;
-    }
+  if (Object.values(registerForm).some(val => !val)) {
+    alert('❌ Por favor completa todos los campos');
+    return;
+  }
 
-    if (registerForm.password !== registerForm.confirmPassword) {
-      alert('❌ Las contraseñas no coinciden');
-      return;
-    }
+  if (registerForm.password !== registerForm.confirmPassword) {
+    alert('❌ Las contraseñas no coinciden');
+    return;
+  }
 
-    if (registerForm.password.length < 6) {
-      alert('❌ La contraseña debe tener al menos 6 caracteres');
-      return;
-    }
+  if (registerForm.password.length < 6) {
+    alert('❌ La contraseña debe tener al menos 6 caracteres');
+    return;
+  }
 
-    if (registerForm.celular.length !== 10 || !registerForm.celular.startsWith('3')) {
-      alert('❌ El celular debe tener 10 dígitos y comenzar con 3');
-      return;
-    }
+  if (registerForm.celular.length !== 10 || !registerForm.celular.startsWith('3')) {
+    alert('❌ El celular debe tener 10 dígitos y comenzar con 3');
+    return;
+  }
 
-    const resultado = Usuario.registrar(registerForm);
+  try {
+    await authService.register({
+      username: registerForm.username,
+      nombre: registerForm.nombre,
+      apellido: registerForm.apellido,
+      correo: registerForm.correo,
+      celular: registerForm.celular,
+      password: registerForm.password
+    });
     
-    if (resultado.success) {
-      alert(`✅ ${resultado.mensaje}`);
-      setVista('login');
-      setRegisterForm({
-        username: '',
-        correo: '',
-        password: '',
-        confirmPassword: '',
-        nombre: '',
-        apellido: '',
-        celular: ''
-      });
-      cargarTodosLosUsuarios();
-    } else {
-      alert(`❌ ${resultado.mensaje}`);
-    }
-  };
+    alert('✅ Usuario registrado exitosamente');
+    setVista('login');
+    setRegisterForm({
+      username: '',
+      correo: '',
+      password: '',
+      confirmPassword: '',
+      nombre: '',
+      apellido: '',
+      celular: ''
+    });
+    cargarTodosLosUsuarios();
+  } catch (error) {
+    alert(`❌ ${error.message}`);
+  }
+};
 
   // Cerrar sesión
   const handleLogout = () => {
-    Usuario.logout();
-    setUsuarioActual(null);
-    setMisCitas([]);
-    setVista('login');
-  };
+  authService.logout();
+  setUsuarioActual(null);
+  setMisCitas([]);
+  setVista('login');
+};
 
   // Exportar usuarios
   const handleExportUsers = () => {
