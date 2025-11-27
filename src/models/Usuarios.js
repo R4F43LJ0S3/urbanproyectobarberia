@@ -327,3 +327,4 @@ class Usuario {
 Usuario.crearAdminPorDefecto();
 
 export default Usuario;
+
