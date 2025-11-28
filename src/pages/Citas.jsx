@@ -4,7 +4,6 @@ import "../styles/Citas.css";
 import Cita from "../models/Citas";
 import Usuario from "../models/Usuarios";
 
-// Datos de barberos
 const datosBarberos = [
   { 
     id: 1, 
@@ -49,12 +48,9 @@ const Citas = () => {
   });
   const [citas, setCitas] = useState([]);
 
-  // Cargar usuario y citas al iniciar
   useEffect(() => {
-    // Verificar usuario autenticado
     const user = Usuario.obtenerSesion();
     
-    // Verificar si hay barbero seleccionado
     if (location.state?.barberoSeleccionado) {
       setBarberoSeleccionado(location.state.barberoSeleccionado);
     }
@@ -67,10 +63,8 @@ const Citas = () => {
         telefono: user.celular
       }));
 
-      // Cargar citas del usuario desde localStorage
       const todasLasCitas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
       
-      // Si es admin, mostrar todas las citas; si no, solo las suyas
       if (user.rol === 'admin') {
         setCitas(todasLasCitas);
       } else {
@@ -89,7 +83,6 @@ const Citas = () => {
     "Corte + Mascarilla",
   ];
 
-  // Crear cita
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -106,13 +99,11 @@ const Citas = () => {
       }
     }
 
-    // Validaciones
     if (!form.nombre || !form.telefono || !form.servicio || !form.fecha || !form.hora) {
       alert('❌ Por favor completa todos los campos obligatorios');
       return;
     }
 
-    // Crear cita usando el modelo
     const resultado = Cita.crearDesdeFomulario({
       nombre: form.nombre,
       telefono: form.telefono,
@@ -127,10 +118,8 @@ const Citas = () => {
       return;
     }
 
-    // Agregar barbero a la cita
     resultado.cita.barbero = barberoSeleccionado?.nombre || "No especificado";
 
-    // Navegar al pago con los datos de la cita
     navigate("/pago", { 
       state: { 
         cita: {
@@ -142,7 +131,6 @@ const Citas = () => {
     });
   };
 
-  // Eliminar cita
   const eliminarCita = (id) => {
     if (window.confirm("¿Deseas eliminar esta cita?")) {
       const resultado = Cita.eliminar(id);
@@ -164,7 +152,6 @@ const Citas = () => {
           : 'Completa tus datos para reservar tu servicio en Urban Barber.'}
       </p>
 
-      {/* BARBERO SELECCIONADO */}
       {barberoSeleccionado && (
         <div className="barbero-seleccionado-card">
           <div className="barbero-seleccionado-content">
@@ -189,7 +176,6 @@ const Citas = () => {
         </div>
       )}
 
-      {/* ALERTA DE USUARIO */}
       {!usuarioActual && (
         <div style={{
           background: 'linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%)',
@@ -224,7 +210,6 @@ const Citas = () => {
       )}
 
       <div className={usuarioActual ? "citas-layout" : "citas-layout-centered"}>
-        {/* FORMULARIO */}
         <div className="card form">
           <label>
             Nombre completo *
@@ -246,11 +231,27 @@ const Citas = () => {
           </label>
 
           <label>
-            Teléfono *
+            Teléfono * (Solo números)
             <input
-              type="text"
+              type="tel"
               value={form.telefono}
-              onChange={(e) => setForm({ ...form, telefono: e.target.value })}
+              onChange={(e) => {
+                // ✅ CORRECCIÓN: e.target.value.replace()
+                const valor = e.target.value.replace(/\D/g, '');
+                
+                // Mostrar notificación si intentó escribir letras
+                if (e.target.value !== valor && e.target.value.length > 0) {
+                  // Solo mostrar el mensaje una vez por intento
+                  if (!e.target.dataset.alertShown) {
+                    e.target.dataset.alertShown = 'true';
+                    setTimeout(() => {
+                      e.target.dataset.alertShown = '';
+                    }, 2000);
+                  }
+                }
+                
+                setForm({ ...form, telefono: valor });
+              }}
               maxLength="10"
               placeholder="3001234567"
               disabled={!!usuarioActual}
@@ -259,6 +260,14 @@ const Citas = () => {
                 cursor: usuarioActual ? 'not-allowed' : 'text'
               }}
             />
+            <small style={{ 
+              color: 'var(--muted)', 
+              fontSize: '0.85rem',
+              display: 'block',
+              marginTop: '4px'
+            }}>
+              ⚠️ Solo números. Debe comenzar con 3 y tener 10 dígitos
+            </small>
           </label>
 
           <label>
@@ -369,7 +378,6 @@ const Citas = () => {
           </div>
         </div>
 
-        {/* LISTADO DE CITAS - SOLO SI HAY USUARIO LOGUEADO */}
         {usuarioActual && (
           <div className="card citas-list">
             <h3>

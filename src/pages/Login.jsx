@@ -4,19 +4,16 @@ import Usuario from "../models/Usuarios";
 
 const Login = () => {
  
-  // ESTADOS
-  const [vista, setVista] = useState('login'); // 'login', 'register', 'profile'
+  const [vista, setVista] = useState('login');
   const [usuarioActual, setUsuarioActual] = useState(null);
   const [todosLosUsuarios, setTodosLosUsuarios] = useState([]);
   const [misCitas, setMisCitas] = useState([]);
 
-  // Formulario de login
   const [loginForm, setLoginForm] = useState({
     username: '',
     password: ''
   });
 
-  // Formulario de registro
   const [registerForm, setRegisterForm] = useState({
     username: '',
     correo: '',
@@ -27,9 +24,6 @@ const Login = () => {
     celular: ''
   });
 
-  // EFECTOS
-  
-  // Cargar sesión al iniciar
   useEffect(() => {
     const user = Usuario.obtenerSesion();
     if (user) {
@@ -40,7 +34,6 @@ const Login = () => {
     cargarTodosLosUsuarios();
   }, []);
 
-  // FUNCIONES
   const cargarTodosLosUsuarios = () => {
     setTodosLosUsuarios(Usuario.obtenerTodos());
   };
@@ -50,7 +43,6 @@ const Login = () => {
     setMisCitas(citas);
   };
 
-  // Manejar login
   const handleLogin = (e) => {
     e.preventDefault();
     
@@ -73,7 +65,6 @@ const Login = () => {
     }
   };
 
-  // Manejar registro
   const handleRegister = (e) => {
     e.preventDefault();
 
@@ -124,7 +115,6 @@ const Login = () => {
     }
   };
 
-  // Cerrar sesión
   const handleLogout = () => {
     Usuario.logout();
     setUsuarioActual(null);
@@ -132,7 +122,6 @@ const Login = () => {
     setVista('login');
   };
 
-  // Exportar usuarios
   const handleExportUsers = () => {
     const resultado = Usuario.exportarATxt();
     if (resultado.success) {
@@ -140,7 +129,29 @@ const Login = () => {
     }
   };
 
-  // Eliminar cita
+  const handleEliminarUsuario = (userId, username) => {
+    if (username === 'admin') {
+      alert('❌ No se puede eliminar el usuario administrador principal');
+      return;
+    }
+
+    if (userId === usuarioActual.id) {
+      alert('❌ No puedes eliminar tu propia cuenta mientras estás conectado');
+      return;
+    }
+
+    if (window.confirm(`⚠️ ¿Estás seguro de eliminar al usuario @${username}?\n\nEsta acción no se puede deshacer.`)) {
+      const resultado = Usuario.eliminarUsuario(userId);
+      
+      if (resultado.success) {
+        alert('✅ Usuario eliminado correctamente');
+        cargarTodosLosUsuarios();
+      } else {
+        alert(`❌ ${resultado.mensaje}`);
+      }
+    }
+  };
+
   const eliminarCita = (id) => {
     if (window.confirm("¿Deseas eliminar esta cita?")) {
       try {
@@ -155,7 +166,6 @@ const Login = () => {
     }
   };
 
-  // Formatear fecha
   const formatearFecha = (fecha) => {
     const date = new Date(fecha + 'T00:00:00');
     return date.toLocaleDateString('es-ES', { 
@@ -166,7 +176,6 @@ const Login = () => {
     });
   };
 
-  // Formatear hora
   const formatearHora = (hora) => {
     const [horas, minutos] = hora.split(':');
     const h = parseInt(horas);
@@ -175,7 +184,6 @@ const Login = () => {
     return `${hora12}:${minutos} ${ampm}`;
   };
 
-  // Agrupar citas por fecha
   const agruparCitasPorFecha = (citas) => {
     const citasPorFecha = citas.reduce((acc, cita) => {
       const fecha = cita.fecha;
@@ -193,7 +201,6 @@ const Login = () => {
     return { citasPorFecha, fechasOrdenadas };
   };
 
-  // VISTA DE LOGIN
   if (vista === 'login') {
     return (
       <main className="page login-page container">
@@ -252,7 +259,6 @@ const Login = () => {
             </div>
 
             <p className="hint-text">
-              💡 Credenciales de admin: <strong>admin / 1234</strong>
             </p>
           </div>
         </div>
@@ -260,7 +266,6 @@ const Login = () => {
     );
   }
 
-  // VISTA DE REGISTRO
   if (vista === 'register') {
     return (
       <main className="page login-page container">
@@ -326,17 +331,23 @@ const Login = () => {
             </label>
 
             <label>
-              Celular *
+              Celular * (Solo números)
               <input
                 type="tel"
                 value={registerForm.celular}
-                onChange={(e) => setRegisterForm({
-                  ...registerForm,
-                  celular: e.target.value
-                })}
+                onChange={(e) => {
+                  const valor = e.target.value.replace(/\D/g, '');
+                  setRegisterForm({
+                    ...registerForm,
+                    celular: valor
+                  });
+                }}
                 maxLength="10"
                 placeholder="3001234567"
               />
+              <small style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>
+                Debe comenzar con 3 y tener 10 dígitos
+              </small>
             </label>
 
             <label>
@@ -382,7 +393,6 @@ const Login = () => {
     );
   }
 
-  // VISTA DE PERFIL
   if (vista === 'profile' && usuarioActual) {
     const esAdmin = usuarioActual.rol === 'admin';
     const citasAMostrar = esAdmin ? 
@@ -481,6 +491,23 @@ const Login = () => {
                     <p className="usuario-fecha">
                       Registro: {new Date(user.fechaRegistro).toLocaleDateString('es-CO')}
                     </p>
+                    
+                    {user.id !== usuarioActual.id && user.username !== 'admin' && (
+                      <button
+                        onClick={() => handleEliminarUsuario(user.id, user.username)}
+                        className="btn outline"
+                        style={{ 
+                          marginTop: '12px', 
+                          width: '100%',
+                          background: 'transparent',
+                          borderColor: '#ef4444',
+                          color: '#ef4444',
+                          fontSize: '0.9rem'
+                        }}
+                      >
+                        🗑️ Eliminar Usuario
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

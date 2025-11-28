@@ -21,13 +21,12 @@ class Usuario {
     this.correo = correo;
     this.celular = celular;
     this.password = password;
-    this.username = username || correo.split('@')[0]; // Username por defecto
+    this.username = username || correo.split('@')[0];
     this.fechaRegistro = new Date().toISOString();
-    this.rol = 'cliente'; // Rol por defecto
-    this.id = Date.now() + Math.random(); // ID único
+    this.rol = 'cliente';
+    this.id = Date.now() + Math.random();
   }
 
-  // Validar nombre
   validarNombre() {
     if (!this.nombre || this.nombre.trim().length < 2) {
       return { valido: false, mensaje: "El nombre debe tener al menos 2 caracteres" };
@@ -35,7 +34,6 @@ class Usuario {
     return { valido: true };
   }
 
-  // Validar correo
   validarCorreo() {
     const regexCorreo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!this.correo || !regexCorreo.test(this.correo)) {
@@ -44,7 +42,6 @@ class Usuario {
     return { valido: true };
   }
 
-  // Validar celular
   validarCelular() {
     const regexCelular = /^3\d{9}$/;
     if (!this.celular || !regexCelular.test(this.celular)) {
@@ -53,7 +50,6 @@ class Usuario {
     return { valido: true };
   }
 
-  // Validar contraseña
   validarPassword() {
     if (!this.password || this.password.length < 6) {
       return { valido: false, mensaje: "La contraseña debe tener al menos 6 caracteres" };
@@ -61,7 +57,6 @@ class Usuario {
     return { valido: true };
   }
 
-  // Validar username
   validarUsername() {
     if (!this.username || this.username.length < 3) {
       return { valido: false, mensaje: "El usuario debe tener al menos 3 caracteres" };
@@ -69,7 +64,6 @@ class Usuario {
     return { valido: true };
   }
 
-  // Validación principal
   validar() {
     const validaciones = [
       this.validarNombre(),
@@ -88,17 +82,14 @@ class Usuario {
     return { valido: true, mensaje: "Usuario válido" };
   }
 
-  // Obtener nombre completo
   getNombreCompleto() {
     return `${this.nombre} ${this.apellido}`;
   }
 
-  // Encriptar contraseña
   encriptarPassword() {
     this.password = CryptoUtils.hashPassword(this.password);
   }
 
-  // Convertir a objeto
   toJSON() {
     return {
       id: this.id,
@@ -114,10 +105,9 @@ class Usuario {
   }
 
   // ==========================================
-  // MÉTODOS ESTÁTICOS - SERVICIO DE AUTH
+  // MÉTODOS ESTÁTICOS
   // ==========================================
 
-  // Obtener todos los usuarios
   static obtenerTodos() {
     try {
       const users = localStorage.getItem('urbanbarber_users');
@@ -128,7 +118,6 @@ class Usuario {
     }
   }
 
-  // Guardar usuarios
   static guardarTodos(users) {
     try {
       localStorage.setItem('urbanbarber_users', JSON.stringify(users));
@@ -139,11 +128,9 @@ class Usuario {
     }
   }
 
-  // Registrar nuevo usuario
   static registrar(userData) {
     const users = Usuario.obtenerTodos();
     
-    // Validar que no exista
     const existe = users.find(
       u => u.username === userData.username || 
            u.correo === userData.correo ||
@@ -157,7 +144,6 @@ class Usuario {
       };
     }
 
-    // Crear nuevo usuario
     const nuevoUsuario = new Usuario(
       userData.nombre,
       userData.apellido,
@@ -167,7 +153,6 @@ class Usuario {
       userData.username
     );
 
-    // Validar
     const validacion = nuevoUsuario.validar();
     if (!validacion.valido) {
       return {
@@ -176,10 +161,8 @@ class Usuario {
       };
     }
 
-    // Encriptar contraseña
     nuevoUsuario.encriptarPassword();
 
-    // Guardar
     users.push(nuevoUsuario.toJSON());
     Usuario.guardarTodos(users);
 
@@ -190,11 +173,9 @@ class Usuario {
     };
   }
 
-  // Iniciar sesión
   static login(username, password) {
     const users = Usuario.obtenerTodos();
     
-    // Buscar usuario por username, correo o celular
     const user = users.find(
       u => u.username === username || 
            u.correo === username || 
@@ -208,7 +189,6 @@ class Usuario {
       };
     }
 
-    // Verificar contraseña
     if (!CryptoUtils.verifyPassword(password, user.password)) {
       return {
         success: false,
@@ -216,7 +196,6 @@ class Usuario {
       };
     }
 
-    // Crear sesión
     const session = {
       userId: user.id,
       username: user.username,
@@ -233,13 +212,11 @@ class Usuario {
     };
   }
 
-  // Cerrar sesión
   static logout() {
     localStorage.removeItem('urbanbarber_session');
     return { success: true, mensaje: 'Sesión cerrada' };
   }
 
-  // Obtener sesión actual
   static obtenerSesion() {
     try {
       const session = localStorage.getItem('urbanbarber_session');
@@ -255,16 +232,47 @@ class Usuario {
     }
   }
 
-  // Verificar si hay sesión activa
   static haySessionActiva() {
     return Usuario.obtenerSesion() !== null;
   }
 
-  // Exportar usuarios a TXT
+  // ✅ NUEVA FUNCIÓN: ELIMINAR USUARIO
+  static eliminarUsuario(userId) {
+    try {
+      const users = Usuario.obtenerTodos();
+      const userToDelete = users.find(u => u.id === userId);
+      
+      if (!userToDelete) {
+        return { success: false, mensaje: 'Usuario no encontrado' };
+      }
+
+      // Protección: no eliminar el admin principal
+      if (userToDelete.username === 'admin') {
+        return { 
+          success: false, 
+          mensaje: 'No se puede eliminar el usuario administrador principal' 
+        };
+      }
+
+      const usersActualizados = users.filter(u => u.id !== userId);
+      Usuario.guardarTodos(usersActualizados);
+
+      return { 
+        success: true, 
+        mensaje: 'Usuario eliminado correctamente' 
+      };
+    } catch (error) {
+      console.error('Error al eliminar usuario:', error);
+      return { 
+        success: false, 
+        mensaje: 'Error al eliminar el usuario' 
+      };
+    }
+  }
+
   static exportarATxt() {
     const users = Usuario.obtenerTodos();
     
-    // Formatear datos (sin contraseñas)
     const datosExportar = users.map(u => ({
       username: u.username,
       nombre: u.nombre,
@@ -287,7 +295,6 @@ class Usuario {
     return { success: true, mensaje: 'Usuarios exportados' };
   }
 
-  // Obtener citas del usuario
   static obtenerCitasDeUsuario(celular) {
     try {
       const todasLasCitas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
@@ -298,7 +305,6 @@ class Usuario {
     }
   }
 
-  // Crear usuario administrador por defecto (si no existe)
   static crearAdminPorDefecto() {
     const users = Usuario.obtenerTodos();
     const adminExiste = users.find(u => u.username === 'admin');
@@ -323,8 +329,6 @@ class Usuario {
   }
 }
 
-// Crear admin al cargar
 Usuario.crearAdminPorDefecto();
 
 export default Usuario;
-
