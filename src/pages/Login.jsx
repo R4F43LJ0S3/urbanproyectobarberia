@@ -36,6 +36,13 @@ const Login = () => {
     cargarTodosLosUsuarios();
   }, []);
 
+  // ✅ NUEVO: Actualizar cuando cambia el filtro de fecha
+  useEffect(() => {
+    if (usuarioActual && usuarioActual.rol === 'admin') {
+      cargarTodosLosUsuarios();
+    }
+  }, [filtroFecha, usuarioActual]);
+
   const cargarTodosLosUsuarios = () => {
     setTodosLosUsuarios(Usuario.obtenerTodos());
   };
@@ -505,7 +512,7 @@ const Login = () => {
     );
   }
 
-  if (vista === 'profile' && usuarioActual) {
+if (vista === 'profile' && usuarioActual) {
     const esAdmin = usuarioActual.rol === 'admin';
     const todasLasCitas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
     const citasAMostrar = esAdmin ? todasLasCitas : 
@@ -513,7 +520,7 @@ const Login = () => {
     
     const { citasPorFecha, fechasOrdenadas } = agruparCitasPorFecha(citasAMostrar);
     
-    // Calcular estadísticas para admin
+    // Calcular estadísticas para admin (se recalcula cuando cambia filtroFecha)
     const stats = esAdmin ? calcularEstadisticas(todasLasCitas) : null;
     const datosServicio = esAdmin ? obtenerCitasPorServicio(todasLasCitas) : [];
     const datosBarbero = esAdmin ? obtenerCitasPorBarbero(todasLasCitas) : [];
@@ -575,6 +582,7 @@ const Login = () => {
             </div>
           </div>
 
+          
           {esAdmin && stats && (
             <div style={{
               background: 'var(--card)',
