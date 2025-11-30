@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../styles/Login.css";
 import Usuario from "../models/Usuarios";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
 
 const Login = () => {
  
@@ -8,6 +9,7 @@ const Login = () => {
   const [usuarioActual, setUsuarioActual] = useState(null);
   const [todosLosUsuarios, setTodosLosUsuarios] = useState([]);
   const [misCitas, setMisCitas] = useState([]);
+  const [filtroFecha, setFiltroFecha] = useState('hoy');
 
   const [loginForm, setLoginForm] = useState({
     username: '',
@@ -200,6 +202,116 @@ const Login = () => {
 
     return { citasPorFecha, fechasOrdenadas };
   };
+
+  // FUNCIONES DE ESTADÍSTICAS
+  const obtenerFechaHoy = () => {
+    const hoy = new Date();
+    return hoy.toISOString().split('T')[0];
+  };
+
+  const obtenerFechaSemana = () => {
+    const hoy = new Date();
+    const hace7dias = new Date(hoy);
+    hace7dias.setDate(hoy.getDate() - 7);
+    return hace7dias.toISOString().split('T')[0];
+  };
+
+  const obtenerFechaMes = () => {
+    const hoy = new Date();
+    const hace30dias = new Date(hoy);
+    hace30dias.setDate(hoy.getDate() - 30);
+    return hace30dias.toISOString().split('T')[0];
+  };
+
+  const filtrarCitasPorFecha = (todasLasCitas) => {
+    const hoy = obtenerFechaHoy();
+    const semana = obtenerFechaSemana();
+    const mes = obtenerFechaMes();
+
+    switch (filtroFecha) {
+      case 'hoy':
+        return todasLasCitas.filter(c => c.fecha === hoy);
+      case 'semana':
+        return todasLasCitas.filter(c => c.fecha >= semana && c.fecha <= hoy);
+      case 'mes':
+        return todasLasCitas.filter(c => c.fecha >= mes && c.fecha <= hoy);
+      case 'todas':
+        return todasLasCitas;
+      default:
+        return todasLasCitas;
+    }
+  };
+
+  const calcularEstadisticas = (citas) => {
+    const citasFiltradas = filtrarCitasPorFecha(citas);
+    
+    return {
+      totalCitas: citasFiltradas.length,
+      citasPagadas: citasFiltradas.filter(c => c.pagado).length,
+      citasPendientes: citasFiltradas.filter(c => !c.pagado).length,
+      clientesActivos: new Set(citasFiltradas.map(c => c.telefono)).size
+    };
+  };
+
+  const obtenerCitasPorServicio = (citas) => {
+    const citasFiltradas = filtrarCitasPorFecha(citas);
+    
+    const citasPorServicio = citasFiltradas.reduce((acc, cita) => {
+      const servicio = cita.servicio || 'Sin especificar';
+      if (!acc[servicio]) {
+        acc[servicio] = 0;
+      }
+      acc[servicio]++;
+      return acc;
+    }, {});
+
+    return Object.entries(citasPorServicio)
+      .map(([nombre, cantidad]) => ({
+        nombre: nombre.length > 25 ? nombre.substring(0, 25) + '...' : nombre,
+        cantidad
+      }))
+      .sort((a, b) => b.cantidad - a.cantidad);
+  };
+
+  const obtenerCitasPorBarbero = (citas) => {
+    const citasFiltradas = filtrarCitasPorFecha(citas);
+    
+    const citasPorBarbero = citasFiltradas.reduce((acc, cita) => {
+      const barbero = cita.barbero || 'Sin asignar';
+      if (!acc[barbero]) {
+        acc[barbero] = 0;
+      }
+      acc[barbero]++;
+      return acc;
+    }, {});
+
+    return Object.entries(citasPorBarbero)
+      .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+      .sort((a, b) => b.cantidad - a.cantidad);
+  };
+
+  const obtenerCitasPorDia = (citas) => {
+    const ultimos7Dias = [];
+    const hoy = new Date();
+    
+    for (let i = 6; i >= 0; i--) {
+      const fecha = new Date(hoy);
+      fecha.setDate(hoy.getDate() - i);
+      const fechaStr = fecha.toISOString().split('T')[0];
+      
+      const citasDelDia = citas.filter(c => c.fecha === fechaStr).length;
+      
+      ultimos7Dias.push({
+        fecha: fecha.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' }),
+        cantidad: citasDelDia
+      });
+    }
+    
+    return ultimos7Dias;
+  };
+
+  const COLORES = ['#c59a2f', '#d4af37', '#f4d774', '#ffd966', '#ffed4e', '#8b7355', '#a0826d'];
+  const COLORES_PIE = ['#22c55e', '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6'];
 
   if (vista === 'login') {
     return (
@@ -395,11 +507,17 @@ const Login = () => {
 
   if (vista === 'profile' && usuarioActual) {
     const esAdmin = usuarioActual.rol === 'admin';
-    const citasAMostrar = esAdmin ? 
-      JSON.parse(localStorage.getItem("citasBarberia") || "[]") : 
+    const todasLasCitas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
+    const citasAMostrar = esAdmin ? todasLasCitas : 
       misCitas.filter(cita => cita.telefono === usuarioActual.celular);
     
     const { citasPorFecha, fechasOrdenadas } = agruparCitasPorFecha(citasAMostrar);
+    
+    // Calcular estadísticas para admin
+    const stats = esAdmin ? calcularEstadisticas(todasLasCitas) : null;
+    const datosServicio = esAdmin ? obtenerCitasPorServicio(todasLasCitas) : [];
+    const datosBarbero = esAdmin ? obtenerCitasPorBarbero(todasLasCitas) : [];
+    const datosPorDia = esAdmin ? obtenerCitasPorDia(todasLasCitas) : [];
 
     return (
       <main className="page login-page container">
@@ -456,6 +574,315 @@ const Login = () => {
               </span>
             </div>
           </div>
+
+          {esAdmin && stats && (
+            <div style={{
+              background: 'var(--card)',
+              borderRadius: '16px',
+              padding: '32px',
+              marginTop: '32px',
+              boxShadow: '0 8px 20px var(--shadow)',
+              border: '1px solid var(--border)'
+            }}>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '32px',
+                flexWrap: 'wrap',
+                gap: '16px'
+              }}>
+                <h2 style={{ color: 'var(--accent)', margin: 0 }}>
+                  📊 Estadísticas del Sistema
+                </h2>
+                
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {['hoy', 'semana', 'mes', 'todas'].map((filtro) => (
+                    <button
+                      key={filtro}
+                      onClick={() => setFiltroFecha(filtro)}
+                      className="btn outline"
+                      style={{
+                        background: filtroFecha === filtro ? 'var(--accent)' : 'transparent',
+                        color: filtroFecha === filtro ? '#fff' : 'var(--accent)',
+                        borderColor: filtroFecha === filtro ? 'var(--accent)' : 'var(--border)'
+                      }}
+                    >
+                      {filtro === 'hoy' && '📅 Hoy'}
+                      {filtro === 'semana' && '📆 Esta Semana'}
+                      {filtro === 'mes' && '📊 Este Mes'}
+                      {filtro === 'todas' && '🗂️ Todas'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* TARJETAS DE RESUMEN */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '20px',
+                marginBottom: '40px'
+              }}>
+                <div style={{
+                  background: 'linear-gradient(135deg, #c59a2f 0%, #d4af37 100%)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  color: 'white',
+                  boxShadow: '0 4px 12px rgba(197, 154, 47, 0.3)'
+                }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>📅</div>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                    {stats.totalCitas}
+                  </div>
+                  <div style={{ opacity: 0.9 }}>Total de Citas</div>
+                </div>
+
+                <div style={{
+                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  color: 'white',
+                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>✅</div>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                    {stats.citasPagadas}
+                  </div>
+                  <div style={{ opacity: 0.9 }}>Citas Pagadas</div>
+                </div>
+
+                <div style={{
+                  background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  color: 'white',
+                  boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+                }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>⏳</div>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                    {stats.citasPendientes}
+                  </div>
+                  <div style={{ opacity: 0.9 }}>Citas Pendientes</div>
+                </div>
+
+                <div style={{
+                  background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  color: 'white',
+                  boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+                }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>👥</div>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                    {stats.clientesActivos}
+                  </div>
+                  <div style={{ opacity: 0.9 }}>Clientes Activos</div>
+                </div>
+
+                <div style={{
+                  background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  color: 'white',
+                  boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)'
+                }}>
+                  <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>📝</div>
+                  <div style={{ fontSize: '2rem', fontWeight: 'bold' }}>
+                    {todosLosUsuarios.length}
+                  </div>
+                  <div style={{ opacity: 0.9 }}>Usuarios Registrados</div>
+                </div>
+              </div>
+
+              {/* GRÁFICA DE LÍNEA - CITAS POR DÍA */}
+              <div style={{
+                background: 'var(--input-bg)',
+                borderRadius: '12px',
+                padding: '24px',
+                marginBottom: '32px',
+                border: '1px solid var(--border)'
+              }}>
+                <h3 style={{ color: 'var(--accent)', marginTop: 0 }}>
+                  📈 Citas de los últimos 7 días
+                </h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={datosPorDia}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis 
+                      dataKey="fecha" 
+                      stroke="var(--muted)"
+                      style={{ fontSize: '0.9rem' }}
+                    />
+                    <YAxis 
+                      stroke="var(--muted)"
+                      style={{ fontSize: '0.9rem' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        background: 'var(--card)',
+                        border: '1px solid var(--border)',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="cantidad" 
+                      stroke="#c59a2f" 
+                      strokeWidth={3}
+                      dot={{ fill: '#c59a2f', r: 6 }}
+                      activeDot={{ r: 8 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+                gap: '32px',
+                marginBottom: '32px'
+              }}>
+                {/* GRÁFICA DE BARRAS - SERVICIOS */}
+                <div style={{
+                  background: 'var(--input-bg)',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  border: '1px solid var(--border)'
+                }}>
+                  <h3 style={{ color: 'var(--accent)', marginTop: 0 }}>
+                    ✂️ Servicios Más Solicitados
+                  </h3>
+                  {datosServicio.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={datosServicio}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                        <XAxis 
+                          dataKey="nombre" 
+                          stroke="var(--muted)"
+                          angle={-45}
+                          textAnchor="end"
+                          height={100}
+                          style={{ fontSize: '0.75rem' }}
+                        />
+                        <YAxis stroke="var(--muted)" />
+                        <Tooltip 
+                          contentStyle={{
+                            background: 'var(--card)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Bar dataKey="cantidad" fill="#c59a2f">
+                          {datosServicio.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORES[index % COLORES.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p style={{ textAlign: 'center', color: 'var(--muted)' }}>
+                      No hay datos disponibles
+                    </p>
+                  )}
+                </div>
+
+                {/* GRÁFICA DE BARRAS - BARBEROS */}
+                <div style={{
+                  background: 'var(--input-bg)',
+                  borderRadius: '12px',
+                  padding: '24px',
+                  border: '1px solid var(--border)'
+                }}>
+                  <h3 style={{ color: 'var(--accent)', marginTop: 0 }}>
+                    💈 Citas por Barbero
+                  </h3>
+                  {datosBarbero.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={datosBarbero}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                        <XAxis 
+                          dataKey="nombre" 
+                          stroke="var(--muted)"
+                          angle={-45}
+                          textAnchor="end"
+                          height={100}
+                          style={{ fontSize: '0.85rem' }}
+                        />
+                        <YAxis stroke="var(--muted)" />
+                        <Tooltip 
+                          contentStyle={{
+                            background: 'var(--card)',
+                            border: '1px solid var(--border)',
+                            borderRadius: '8px'
+                          }}
+                        />
+                        <Bar dataKey="cantidad" fill="#d4af37">
+                          {datosBarbero.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORES[index % COLORES.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p style={{ textAlign: 'center', color: 'var(--muted)' }}>
+                      No hay datos disponibles
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* GRÁFICA DE PASTEL - ESTADO DE PAGOS */}
+              <div style={{
+                background: 'var(--input-bg)',
+                borderRadius: '12px',
+                padding: '24px',
+                border: '1px solid var(--border)'
+              }}>
+                <h3 style={{ color: 'var(--accent)', marginTop: 0, textAlign: 'center' }}>
+                  💳 Estado de Pagos
+                </h3>
+                {stats.totalCitas > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Pagadas', value: stats.citasPagadas },
+                          { name: 'Pendientes', value: stats.citasPendientes }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {[
+                          { name: 'Pagadas', value: stats.citasPagadas },
+                          { name: 'Pendientes', value: stats.citasPendientes }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORES_PIE[index % COLORES_PIE.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{
+                          background: 'var(--card)',
+                          border: '1px solid var(--border)',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <p style={{ textAlign: 'center', color: 'var(--muted)' }}>
+                    No hay datos disponibles
+                  </p>
+                )}
+              </div>
+            </div>
+          )}      
 
           {esAdmin && (
             <div className="usuarios-section">

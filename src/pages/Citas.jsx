@@ -51,8 +51,11 @@ const Citas = () => {
   useEffect(() => {
     const user = Usuario.obtenerSesion();
     
-    if (location.state?.barberoSeleccionado) {
-      setBarberoSeleccionado(location.state.barberoSeleccionado);
+    // ✅ REDIRIGIR SI NO HAY SESIÓN
+    if (!user) {
+      alert('⚠️ Debes iniciar sesión para agendar una cita');
+      navigate('/login');
+      return;
     }
 
     if (user) {
@@ -72,7 +75,7 @@ const Citas = () => {
         setCitas(citasUsuario);
       }
     }
-  }, [location.state]);
+  }, [location.state, navigate]);
 
   const servicios = [
     "Corte Sencillo",
@@ -86,22 +89,14 @@ const Citas = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // ✅ VALIDACIÓN ESTRICTA DE SESIÓN
     if (!usuarioActual) {
-      const continuar = window.confirm(
-        '⚠️ No has iniciado sesión.\n\n' +
-        '¿Deseas continuar sin cuenta? (No podrás ver tu historial de citas)\n\n' +
-        'Presiona "Aceptar" para continuar o "Cancelar" para iniciar sesión.'
-      );
-      
-      if (!continuar) {
-        navigate('/login');
-        return;
-      }
+      alert('⚠️ Debes iniciar sesión para agendar una cita');
+      navigate('/login');
+      return;
     }
 
     if (!form.nombre || !form.telefono || !form.servicio || !form.fecha || !form.hora) {
-      alert('❌ Por favor completa todos los campos obligatorios');
-      return;
     }
 
     const resultado = Cita.crearDesdeFomulario({
@@ -173,39 +168,6 @@ const Citas = () => {
           >
             Cambiar barbero
           </button>
-        </div>
-      )}
-
-      {!usuarioActual && (
-        <div style={{
-          background: 'linear-gradient(135deg, #fff9e6 0%, #fffbf0 100%)',
-          border: '2px solid #ffd966',
-          borderRadius: '12px',
-          padding: '16px',
-          marginBottom: '24px',
-          textAlign: 'center'
-        }}>
-          <p style={{ margin: 0, color: '#666' }}>
-            💡 <strong>¿Tienes cuenta?</strong> 
-            <button
-              onClick={() => navigate('/login')}
-              style={{
-                marginLeft: '8px',
-                background: '#c59a2f',
-                color: 'white',
-                border: 'none',
-                padding: '6px 16px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontWeight: '600'
-              }}
-            >
-              Iniciar Sesión
-            </button>
-          </p>
-          <p style={{ margin: '8px 0 0', color: '#999', fontSize: '0.9rem' }}>
-            Inicia sesión para ver tu historial de citas
-          </p>
         </div>
       )}
 
