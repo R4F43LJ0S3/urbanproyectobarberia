@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import "../styles/Login.css";
 import Usuario from "../models/Usuarios";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend } from 'recharts';
@@ -36,12 +36,10 @@ const Login = () => {
     cargarTodosLosUsuarios();
   }, []);
 
-  // ✅ NUEVO: Actualizar cuando cambia el filtro de fecha
-  useEffect(() => {
-    if (usuarioActual && usuarioActual.rol === 'admin') {
-      cargarTodosLosUsuarios();
-    }
-  }, [filtroFecha, usuarioActual]);
+  // ✅ SOLUCIÓN: Usar useMemo para recalcular cuando cambia filtroFecha
+  const todasLasCitas = useMemo(() => {
+    return JSON.parse(localStorage.getItem("citasBarberia") || "[]");
+  }, [filtroFecha]);
 
   const cargarTodosLosUsuarios = () => {
     setTodosLosUsuarios(Usuario.obtenerTodos());
@@ -317,6 +315,27 @@ const Login = () => {
     return ultimos7Dias;
   };
 
+  // ✅ USAR useMemo PARA QUE SE RECALCULEN AL CAMBIAR filtroFecha
+  const stats = useMemo(() => {
+    if (!usuarioActual || usuarioActual.rol !== 'admin') return null;
+    return calcularEstadisticas(todasLasCitas);
+  }, [todasLasCitas, usuarioActual, filtroFecha]);
+
+  const datosServicio = useMemo(() => {
+    if (!usuarioActual || usuarioActual.rol !== 'admin') return [];
+    return obtenerCitasPorServicio(todasLasCitas);
+  }, [todasLasCitas, usuarioActual, filtroFecha]);
+
+  const datosBarbero = useMemo(() => {
+    if (!usuarioActual || usuarioActual.rol !== 'admin') return [];
+    return obtenerCitasPorBarbero(todasLasCitas);
+  }, [todasLasCitas, usuarioActual, filtroFecha]);
+
+  const datosPorDia = useMemo(() => {
+    if (!usuarioActual || usuarioActual.rol !== 'admin') return [];
+    return obtenerCitasPorDia(todasLasCitas);
+  }, [todasLasCitas, usuarioActual, filtroFecha]);
+
   const COLORES = ['#c59a2f', '#d4af37', '#f4d774', '#ffd966', '#ffed4e', '#8b7355', '#a0826d'];
   const COLORES_PIE = ['#22c55e', '#ef4444', '#3b82f6', '#f59e0b', '#8b5cf6'];
 
@@ -512,19 +531,12 @@ const Login = () => {
     );
   }
 
-if (vista === 'profile' && usuarioActual) {
+  if (vista === 'profile' && usuarioActual) {
     const esAdmin = usuarioActual.rol === 'admin';
-    const todasLasCitas = JSON.parse(localStorage.getItem("citasBarberia") || "[]");
     const citasAMostrar = esAdmin ? todasLasCitas : 
       misCitas.filter(cita => cita.telefono === usuarioActual.celular);
     
     const { citasPorFecha, fechasOrdenadas } = agruparCitasPorFecha(citasAMostrar);
-    
-    // Calcular estadísticas para admin (se recalcula cuando cambia filtroFecha)
-    const stats = esAdmin ? calcularEstadisticas(todasLasCitas) : null;
-    const datosServicio = esAdmin ? obtenerCitasPorServicio(todasLasCitas) : [];
-    const datosBarbero = esAdmin ? obtenerCitasPorBarbero(todasLasCitas) : [];
-    const datosPorDia = esAdmin ? obtenerCitasPorDia(todasLasCitas) : [];
 
     return (
       <main className="page login-page container">
